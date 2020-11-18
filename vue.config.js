@@ -1,7 +1,14 @@
+const config = require('./lib/config').buildConfig()
+
 module.exports = {
   devServer: {
     port: 3461,
     host: 'openresync.test',
-    proxy: 'http://openresync.test:4000',
+    proxy: {
+      '.*': {
+        target: 'http://openresync.test:' + config.server.port,
+        ws: true,
+      },
+    },
   },
 }

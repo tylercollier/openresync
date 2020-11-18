@@ -11,7 +11,7 @@ import { getMainDefinition } from 'apollo-utilities'
 const httpLink = createHttpLink()
 
 const wsLink = new WebSocketLink({
-  uri: 'ws://localhost:4000/subscriptions',
+  uri: `ws://${location.host}/subscriptions`,
   options: {
     reconnect: true,
   },
