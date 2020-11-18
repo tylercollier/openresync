@@ -1,8 +1,4 @@
 const {ApolloServer, gql, PubSub} = require('apollo-server')
-const { createServer } = require('http')
-const { SubscriptionServer } = require('subscriptions-transport-ws')
-const { execute, subscribe } = require('graphql')
-const { makeExecutableSchema } = require('@graphql-tools/schema')
 
 const pubsub = new PubSub()
 
@@ -45,15 +41,12 @@ const books = [
   },
 ];
 
-// Resolvers define the technique for fetching the types defined in the
-// schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
   Query: {
     books: () => books,
   },
   Mutation: {
     mutation1: (root, args, context) => {
-      console.log('mutation 1 args', args)
       let count = 0
       setInterval(() => {
         count++
@@ -64,7 +57,6 @@ const resolvers = {
           }
         })
       }, 3000)
-      console.log('mutation 1 args', args)
       return 7
     },
   },
@@ -78,12 +70,11 @@ const resolvers = {
   },
 };
 
-// The ApolloServer constructor requires two parameters: your schema
-// definition and your set of resolvers.
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  uploads: false,
+  // The only way I knew to use subscriptions here was from:
+  // https://github.com/apollographql/apollo-server/issues/1534#issuecomment-413179501
   subscriptions: {
     path: '/subscriptions',
     onConnect: async (connectionParams, webSocket) => {
@@ -96,23 +87,3 @@ const server = new ApolloServer({
 server.listen().then(({url}) => {
   console.log(`🚀  Server ready at ${url}`);
 });
-
-// const schema = makeExecutableSchema({
-//   typeDefs,
-//   resolvers,
-// })
-//
-// // Wrap the Express server
-// const ws = createServer(server);
-// ws.listen(4000, () => {
-//   console.log(`Apollo Server is now running on http://localhost:${4000}`);
-//   // Set up the WebSocket for handling GraphQL subscriptions
-//   new SubscriptionServer({
-//     execute,
-//     subscribe,
-//     schema,
-//   }, {
-//     server: ws,
-//     path: '/subscriptions',
-//   });
-// });
