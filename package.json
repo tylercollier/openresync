@@ -2,12 +2,12 @@
   "name": "openresync",
   "version": "0.1.0",
   "private": true,
-  "main": "server/index.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
+  "main": "server/index.js",
   "dependencies": {
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",
@@ -30,6 +30,7 @@
     "babel-eslint": "^10.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
+    "vue-cli-plugin-tailwind": "~1.5.0",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
