@@ -1,5 +1,5 @@
 const {ApolloServer, gql, PubSub} = require('apollo-server')
-const config = require('../lib/config').buildConfig()
+const config = require('../lib/config').buildUserConfig()
 
 const pubsub = new PubSub()
 
