@@ -4,6 +4,9 @@ node_modules
 
 config/config.js
 
+docker/.env
+docker/volumes/
+
 # local env files
 .env.local
 .env.*.local

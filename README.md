@@ -1,4 +1,4 @@
-# opensync
+# openresync
 
 ## Project setup
 ```
