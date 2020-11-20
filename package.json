@@ -23,7 +23,8 @@
     "lodash": "^4.17.20",
     "nodemon": "^2.0.6",
     "vue": "^2.6.11",
-    "vue-apollo": "^3.0.5"
+    "vue-apollo": "^3.0.5",
+    "xml2js": "^0.4.23"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
