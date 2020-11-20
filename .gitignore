@@ -4,6 +4,7 @@ node_modules
 
 config/config.js
 config/internalConfig.json
+config/sources/
 
 docker/.env
 docker/volumes/
