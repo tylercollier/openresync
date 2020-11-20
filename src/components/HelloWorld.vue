@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>sup</h1>
+    <h1 class="text-6xl">Open RE Sync</h1>
     <div v-if="books">{{books}}</div>
     <div>
       <button @click="go">Mutate!</button>
