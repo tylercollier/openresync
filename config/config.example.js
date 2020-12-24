@@ -13,7 +13,6 @@ module.exports = {
   version: '0.1.0',
   sources: {
     aborBridgeInteractive: {
-      enabled: false,
       clientId: '',
       clientSecret: '',
       accessToken: '',
@@ -37,12 +36,11 @@ module.exports = {
       makeTableName: name => 'AborBridge' + name,
     },
     aborTrestle: {
-      enabled: true,
       metadataEndpoint: 'https://api-prod.corelogic.com/trestle/odata/$metadata',
       replicationEndpoint: 'https://api-prod.corelogic.com/trestle/odata/{resource}?replication=true',
       clientId: '',
       clientSecret: '',
-      metadataPath: pathLib.resolve(__dirname, '/sources/abor_trestle/austin_metadata_trestle.xml'),
+      metadataPath: pathLib.resolve(__dirname, 'sources/abor_trestle/austin_metadata_trestle.xml'),
       useOrderBy: true,
       dataAdapterName: 'mysql',
       mysql: {
