@@ -1,4 +1,4 @@
-const config = require('./lib/config').buildConfig()
+const config = require('./lib/config').buildUserConfig()
 
 module.exports = {
   devServer: {
