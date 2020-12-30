@@ -31,7 +31,7 @@ module.exports = {
       // mlsResources: ['Property'],
       // mlsResources: ['Property', 'Member'],
 
-      // Reminder: The Property resource always includes Media. You can't get rid of it.
+      // Reminder: The Property resource includes Media unless you use $unselect.
       // mlsResources: ['Property', 'Media'],
       makeTableName: name => 'AborBridge' + name,
     },
