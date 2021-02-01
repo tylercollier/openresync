@@ -6,6 +6,8 @@ config/config.js
 config/internalConfig.json
 config/sources/
 
+log/
+
 docker/.env
 docker/volumes/
 
