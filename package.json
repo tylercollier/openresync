@@ -21,6 +21,7 @@
     "axios": "^0.21.1",
     "concat-stream": "^2.0.0",
     "core-js": "^3.6.5",
+    "cron": "^1.8.2",
     "graphql-tag": "^2.11.0",
     "knex": "^0.21.12",
     "lodash": "^4.17.20",
