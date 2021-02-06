@@ -17,48 +17,34 @@ module.exports = {
       clientSecret: '',
       accessToken: '',
       metadataEndpoint: 'https://api.bridgedataoutput.com/api/v2/OData/actris_ref/$metadata',
-      replicationEndpoint: 'https://api.bridgedataoutput.com/api/v2/OData/actris_ref/{resource}/replication',
-      // replicationEndpoint: 'https://api.bridgedataoutput.com/api/v2/OData/abor_ref/{resource}',
-      top: 2000,
-      // top: 2,
-      // metadataPath: pathLib.resolve(__dirname + '/sources/abor_bridge_interactive/abor_ref_metadata.xml'),
-      metadataPath: pathLib.resolve(__dirname, 'sources/abor_bridge_interactive/actris_ref_metadata.xml'),
-      useOrderBy: false,
-      dataAdapterName: 'mysql',
-      mysql: {
-        connectionString: 'mysql://user1:password1@localhost:33033/mymls',
+      // metadataPath is for debugging only. It can be used when you want to read from it instead of the internet.
+      // metadataPath: pathLib.resolve(__dirname, 'sources/abor_bridge_interactive/actris_ref_metadata.xml'),
+      getReplicationEndpoint: mlsResourceName => {
+        return 'https://api.bridgedataoutput.com/api/v2/OData/actris_ref/{resource}/replication'
       },
-      // mlsResources: ['Property'],
-      // mlsResources: ['Property', 'Member'],
+      getPurgeEndpoint: mlsResourceName => {
+        return 'https://api.bridgedataoutput.com/api/v2/OData/actris_ref/{resource}/replication'
+      },
+      top: 2000,
+      useOrderBy: false,
+      destinations: [
+        {
+          name: 'mysql1',
+          type: 'mysql',
+          config: {
+            connectionString: 'mysql://user1:password1@localhost:33033/mymls',
 
+            // makeTableName: name => 'mytable' + name,
+            // makeFieldName: name => 'myfield' + name,
+          },
+        },
+        {
+          name: 'devnull1',
+          type: 'devnull',
+        },
+      ],
       // Reminder: The Property resource includes Media unless you use $unselect.
       // mlsResources: ['Property', 'Media'],
-      makeTableName: name => 'AborBridge' + name,
-    },
-    aborTrestle: {
-      metadataEndpoint: 'https://api-prod.corelogic.com/trestle/odata/$metadata',
-      replicationEndpoint: 'https://api-prod.corelogic.com/trestle/odata/{resource}?replication=true',
-      clientId: '',
-      clientSecret: '',
-      metadataPath: pathLib.resolve(__dirname, 'sources/abor_trestle/austin_metadata_trestle.xml'),
-      useOrderBy: true,
-      dataAdapterName: 'mysql',
-      mysql: {
-        connectionString: 'mysql://user1:password1@localhost:33033/mymls',
-      },
-      mlsResources: ['Property', 'Member'],
-      // mlsResources: ['Property'],
-      // mlsResources: ['Member'],
-      // mlsResources: ['Office'],
-      // mlsResources: ['CustomProperty'],
-      // mlsResources: ['OpenHouse'],
-      // mlsResources: ['PropertyRooms'],
-      // mlsResources: ['Media'],
-      // mlsResources: ['Property', 'Member', 'Office', 'CustomProperty', 'OpenHouse', 'PropertyRooms'],
-
-      // These are listed in the Trestle docs but don't show up in the metadata. Hmm.
-      // mlsResources: ['TeamMembers'],
-      // mlsResources: ['Teams'],
     },
   },
   server: {
