@@ -17,17 +17,15 @@ describe('sync structure', () => {
     },
   }
   let db
-  let entityTypes
+  let metadata
 
   beforeAll(async () => {
     db = knex({
       client: 'mysql2',
       connection: destinationConfig.config.connectionString,
     })
-    const metadata = await getBridgeMetadata()
-    const schemas = metadata['edmx:Edmx']['edmx:DataServices'][0].Schema
+    metadata = await getBridgeMetadata()
     const platformAdapter = biPlatformAdapter()
-    entityTypes = platformAdapter.getEntityTypes(schemas)
   })
 
   afterAll(() => {
@@ -42,39 +40,37 @@ describe('sync structure', () => {
 
   describe('effectNewTable', () => {
     describe('without expand', () => {
-      const mlsResources = [
-        {
-          name: 'Property',
-        },
-      ]
+      const mlsResource = {
+        name: 'Property',
+      }
+
       test('nested tables are not created', async () => {
         const dataAdapter = buildDataAdapter({
           destinationConfig,
           platformAdapterName,
         })
-        await dataAdapter.private.effectNewTable(mlsResources[0], entityTypes, getIndexes)
+        await dataAdapter.syncStructure(mlsResource, metadata)
         await expect(db.schema.hasTable('Property')).resolves.toEqual(true)
         await expect(db.schema.hasTable('Media')).resolves.toEqual(false)
       })
     })
 
     describe('with expand', () => {
-      const mlsResources = [
-        {
-          name: 'Property',
-          expand: [
-            {
-              name: 'Media',
-            },
-          ],
-        },
-      ]
+      const mlsResource = {
+        name: 'Property',
+        expand: [
+          {
+            name: 'Media',
+          },
+        ],
+      }
+
       test('nested tables are created', async () => {
         const dataAdapter = buildDataAdapter({
           destinationConfig,
           platformAdapterName,
         })
-        await dataAdapter.private.effectNewTable(mlsResources[0], entityTypes, getIndexes)
+        await dataAdapter.syncStructure(mlsResource, metadata)
         await expect(db.schema.hasTable('Property')).resolves.toEqual(true)
         await expect(db.schema.hasTable('Media')).resolves.toEqual(true)
       })
