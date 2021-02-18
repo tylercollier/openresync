@@ -43,12 +43,20 @@ describe('sync structure', () => {
       const mlsResource = {
         name: 'Property',
       }
+      let dataAdapter
 
-      test('nested tables are not created', async () => {
-        const dataAdapter = buildDataAdapter({
+      beforeEach(() => {
+        dataAdapter = buildDataAdapter({
           destinationConfig,
           platformAdapterName,
         })
+      })
+
+      afterEach(() => {
+        dataAdapter.closeConnection()
+      })
+
+      test('nested tables are not created', async () => {
         await dataAdapter.syncStructure(mlsResource, metadata)
         await expect(db.schema.hasTable('Property')).resolves.toEqual(true)
         await expect(db.schema.hasTable('Media')).resolves.toEqual(false)
@@ -64,12 +72,20 @@ describe('sync structure', () => {
           },
         ],
       }
+      let dataAdapter
 
-      test('nested tables are created', async () => {
-        const dataAdapter = buildDataAdapter({
+      beforeEach(() => {
+        dataAdapter = buildDataAdapter({
           destinationConfig,
           platformAdapterName,
         })
+      })
+
+      afterEach(() => {
+        dataAdapter.closeConnection()
+      })
+
+      test('nested tables are created', async () => {
         await dataAdapter.syncStructure(mlsResource, metadata)
         await expect(db.schema.hasTable('Property')).resolves.toEqual(true)
         await expect(db.schema.hasTable('Media')).resolves.toEqual(true)
