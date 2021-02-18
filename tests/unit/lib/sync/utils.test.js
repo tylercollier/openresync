@@ -12,3 +12,29 @@ test('getOldestBatchId', () => {
 
   expect(utils.getOldestBatchId(filesPerMlsResource, 'sync')).toEqual('2021-01-17-T-06-44-06-623Z')
 })
+
+describe('flattenExpandedMlsResources', () => {
+  const mlsResources = [{
+    name: 'Member',
+    expand: [{
+      name: 'Property',
+      expand: [{
+        name: 'Media',
+      }],
+    }],
+  }, {
+    name: 'Office',
+    expand: [{
+      name: 'Property',
+    }],
+  }]
+
+  test('flattens and uniquifies', () => {
+    expect(utils.flattenExpandedMlsResources(mlsResources)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'Member' }),
+      expect.objectContaining({ name: 'Office' }),
+      expect.objectContaining({ name: 'Property' }),
+      expect.objectContaining({ name: 'Media' }),
+    ]))
+  })
+})
