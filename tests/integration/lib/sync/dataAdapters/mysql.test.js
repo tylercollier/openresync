@@ -33,7 +33,7 @@ describe('sync structure', () => {
   })
 
   beforeEach(async () => {
-    for (const mlsResourceName of ['Property', 'Media']) {
+    for (const mlsResourceName of ['Property', 'Media', 'Member']) {
       await db.schema.dropTableIfExists(mlsResourceName)
     }
   })
@@ -79,18 +79,55 @@ describe('sync structure', () => {
       })
     })
 
+    describe('without select', () => {
+      test('all fields are created', async () => {
+        const mlsResource = {
+          name: 'Property',
+        }
+        await dataAdapter.syncStructure(mlsResource, metadata)
+        const columnInfo = await db.table('Property').columnInfo()
+        expect(Object.keys(columnInfo)).toHaveLength(187)
+      })
+    })
+
     describe('with select', () => {
       test('only selected subset of fields are created', async () => {
         const mlsResource = {
           name: 'Property',
-          selectFn: property => {
-            return ['ListingKey', 'ListingKeyNumeric', 'ListPrice'].includes(property.$.Name)
-          },
+          selectFn: fieldName => ['ListingKey', 'ListingKeyNumeric', 'ListPrice'].includes(fieldName),
         }
         await dataAdapter.syncStructure(mlsResource, metadata)
         const columnInfo = await db.table('Property').columnInfo()
         // 5 because ModificationTimestamp and PhotosChangeTimestamp are automatically included.
         expect(Object.keys(columnInfo)).toHaveLength(5)
+      })
+    })
+
+    describe('with select and expand', () => {
+      test('from each resource, only selected subset of fields are created', async () => {
+        const mlsResource = {
+          name: 'Property',
+          selectFn: fieldName => ['ListingKey', 'ListingKeyNumeric', 'ListPrice'].includes(fieldName),
+          expand: [
+            {
+              name: 'Member',
+              selectFn: fieldName => ['MemberKey', 'MemberKeyNumeric', 'MemberCity'].includes(fieldName),
+            },
+            {
+              name: 'Media',
+            },
+          ]
+        }
+        await dataAdapter.syncStructure(mlsResource, metadata)
+        let columnInfo
+        columnInfo = await db.table('Property').columnInfo()
+        // 5 because ModificationTimestamp and PhotosChangeTimestamp are automatically included.
+        expect(Object.keys(columnInfo)).toHaveLength(5)
+        columnInfo = await db.table('Member').columnInfo()
+        // 4 because ModificationTimestamp is automatically included.
+        expect(Object.keys(columnInfo)).toHaveLength(4)
+        columnInfo = await db.table('Media').columnInfo()
+        expect(Object.keys(columnInfo)).toHaveLength(12)
       })
     })
   })
