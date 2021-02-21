@@ -38,25 +38,25 @@ describe('sync structure', () => {
     }
   })
 
-  describe('effectNewTable', () => {
+  describe('syncStructure', () => {
+    let dataAdapter
+
+    beforeEach(() => {
+      dataAdapter = buildDataAdapter({
+        destinationConfig,
+        platformAdapterName,
+      })
+    })
+
+    afterEach(() => {
+      dataAdapter.closeConnection()
+    })
+
     describe('without expand', () => {
-      const mlsResource = {
-        name: 'Property',
-      }
-      let dataAdapter
-
-      beforeEach(() => {
-        dataAdapter = buildDataAdapter({
-          destinationConfig,
-          platformAdapterName,
-        })
-      })
-
-      afterEach(() => {
-        dataAdapter.closeConnection()
-      })
-
       test('nested tables are not created', async () => {
+        const mlsResource = {
+          name: 'Property',
+        }
         await dataAdapter.syncStructure(mlsResource, metadata)
         await expect(db.schema.hasTable('Property')).resolves.toEqual(true)
         await expect(db.schema.hasTable('Media')).resolves.toEqual(false)
@@ -72,23 +72,25 @@ describe('sync structure', () => {
           },
         ],
       }
-      let dataAdapter
-
-      beforeEach(() => {
-        dataAdapter = buildDataAdapter({
-          destinationConfig,
-          platformAdapterName,
-        })
-      })
-
-      afterEach(() => {
-        dataAdapter.closeConnection()
-      })
-
       test('nested tables are created', async () => {
         await dataAdapter.syncStructure(mlsResource, metadata)
         await expect(db.schema.hasTable('Property')).resolves.toEqual(true)
         await expect(db.schema.hasTable('Media')).resolves.toEqual(true)
+      })
+    })
+
+    describe('with select', () => {
+      test('only selected subset of fields are created', async () => {
+        const mlsResource = {
+          name: 'Property',
+          selectFn: property => {
+            return ['ListingKey', 'ListingKeyNumeric', 'ListPrice'].includes(property.$.Name)
+          },
+        }
+        await dataAdapter.syncStructure(mlsResource, metadata)
+        const columnInfo = await db.table('Property').columnInfo()
+        // 5 because ModificationTimestamp and PhotosChangeTimestamp are automatically included.
+        expect(Object.keys(columnInfo)).toHaveLength(5)
       })
     })
   })
