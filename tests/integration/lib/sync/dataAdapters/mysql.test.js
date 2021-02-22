@@ -94,7 +94,7 @@ describe('sync structure', () => {
       test('only selected subset of fields are created', async () => {
         const mlsResource = {
           name: 'Property',
-          selectFn: fieldName => ['ListingKey', 'ListingKeyNumeric', 'ListPrice'].includes(fieldName),
+          select: ['ListingKey', 'ListingKeyNumeric', 'ListPrice'],
         }
         await dataAdapter.syncStructure(mlsResource, metadata)
         const columnInfo = await db.table('Property').columnInfo()
@@ -107,11 +107,11 @@ describe('sync structure', () => {
       test('from each resource, only selected subset of fields are created', async () => {
         const mlsResource = {
           name: 'Property',
-          selectFn: fieldName => ['ListingKey', 'ListingKeyNumeric', 'ListPrice'].includes(fieldName),
+          select: ['ListingKey', 'ListingKeyNumeric', 'ListPrice'],
           expand: [
             {
               name: 'Member',
-              selectFn: fieldName => ['MemberKey', 'MemberKeyNumeric', 'MemberCity'].includes(fieldName),
+              select: ['MemberKey', 'MemberKeyNumeric', 'MemberCity'],
             },
             {
               name: 'Media',
