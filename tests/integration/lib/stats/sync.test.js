@@ -67,8 +67,6 @@ describe('stats/sync', () => {
 
   afterEach(() => {
     mockFs.restore()
-    eventEmitter.removeAllListeners()
-
     destinationManager.closeConnections()
   })
 
