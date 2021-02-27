@@ -1,5 +1,4 @@
-global.console2 = global.console
-const mockFs = require('mock-fs')
+const { mockFs, restoreFs } = require('../../../lib/mock-fs')
 const destinationManagerLib = require('../../../../lib/sync/destinationManager')
 const pino = require('pino')
 const EventEmitter = require('events')
@@ -66,21 +65,22 @@ describe('stats/sync', () => {
   })
 
   afterEach(() => {
-    mockFs.restore()
+    restoreFs()
     destinationManager.closeConnections()
   })
 
-  test('stub fs', async () => {
+  test('the event emitter emits and we listen and write to the database', async () => {
     const statsSync = statsSyncLib(db)
     statsSync.listen(eventEmitter)
     await destinationManager.resumeSync()
-    const rows = await db.select(['name', 'batch_id']).from(makeTableName('sync_sources'))
 
     // This timeout ensures we don't end the test before the event emitter callback is finished.
     // That event emitter callback uses the db object, so it makes sense if it'd behave weirdly
     // (crashes the test runner) if we kill the db connection while it's in use.
     // The odd thing is the following tests (database checks) (almost) always seem to pass,
     // so I wouldn't think that destroying the db connection would cause a problem. But it does.
+    //     Update: I question whether my tests were passing as only a day or two later did I write
+    //             the code that would make the tests pass.
     // My lesson learned here is that this isn't really a good idea for automated testing in
     // the traditional sense, and the way we're solving it makes the test slow. However,
     // overall it's better to have this automated test and easier than running it by hand,
@@ -88,8 +88,15 @@ describe('stats/sync', () => {
     // with other tests that are meant to be fast, but we can still get plenty of value out of it.
     await new Promise(resolve => setTimeout(resolve, 200))
 
+    let rows
+    rows = await db.select('*').from(makeTableName('sync_sources'))
     expect(rows).toHaveLength(1)
     expect(rows[0].name).toEqual('myMlsSource')
     expect(rows[0].batch_id).toEqual('2021-02-18-T-06-24-07-623Z')
+    const syncSourcesRecord = rows[0]
+    rows = await db.select('*').from(makeTableName('sync_resources'))
+    expect(rows).toHaveLength(1)
+    expect(rows[0].sync_sources_id).toEqual(syncSourcesRecord.id)
+    expect(rows[0].name).toEqual('Property')
   })
 })

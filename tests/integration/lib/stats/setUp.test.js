@@ -1,28 +1,16 @@
 const knex = require('knex')
 const { setUp, makeTableName } = require('../../../../lib/stats/setUp')
-const crypto = require('crypto')
+const { createRandomTestDb, dropAndDestroyTestDb } = require('../../../lib/db')
 
 describe('setUp', () => {
   let db
-  const testDbName = 'test_' + crypto.randomBytes(5).toString('hex')
 
   beforeAll(async () => {
-    db = knex({
-      client: 'mysql2',
-      connection: `mysql://root:root@localhost:33033/`
-    })
-    await db.raw(`CREATE DATABASE ${testDbName}`)
-    await db.raw(`GRANT ALL PRIVILEGES ON ${testDbName}.* TO user1`)
-    db.destroy()
-    db = knex({
-      client: 'mysql2',
-      connection: `mysql://user1:password1@localhost:33033/${testDbName}`
-    })
+    db = await createRandomTestDb()
   })
 
   afterAll(async () => {
-    await db.raw(`DROP DATABASE ${testDbName}`)
-    db.destroy()
+    await dropAndDestroyTestDb(db)
   })
 
   beforeEach(async () => {
