@@ -4,32 +4,22 @@ const { buildDataAdapter } = require('../../../../../lib/sync/dataAdapters/index
 const { getIndexes } = require('../../../../../lib/sync/indexes')
 const { getBridgeMetadata } = require('../../../../fixtures/index')
 const biPlatformAdapter = require('../../../../../lib/sync/platformAdapters/bridgeInteractive')
+const { createRandomTestDb, dropAndDestroyTestDb } = require('../../../../lib/db')
 
 describe('mysql data adapter', () => {
   const mlsSourceName = 'myMlsSource'
   const platformAdapterName = 'bridgeInteractive'
-  const testDbName = 'mymls_test'
-  const destinationConfig = {
-    name: 'mysqlTest',
-    type: 'mysql',
-    config: {
-      connectionString: `mysql://user1:password1@localhost:33033/${testDbName}`,
-    },
-  }
   let db
   let metadata
 
   beforeAll(async () => {
-    db = knex({
-      client: 'mysql2',
-      connection: destinationConfig.config.connectionString,
-    })
+    db = await createRandomTestDb()
     metadata = await getBridgeMetadata()
     const platformAdapter = biPlatformAdapter()
   })
 
-  afterAll(() => {
-    db.destroy()
+  afterAll(async () => {
+    await dropAndDestroyTestDb(db)
   })
 
   beforeEach(async () => {
@@ -41,7 +31,14 @@ describe('mysql data adapter', () => {
   describe('some reusable block', () => {
     let dataAdapter
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      const destinationConfig = {
+        name: 'mysqlTest',
+        type: 'mysql',
+        config: {
+          connectionString: `mysql://user1:password1@localhost:33033/${db.client.database()}`,
+        },
+      }
       dataAdapter = buildDataAdapter({
         destinationConfig,
         platformAdapterName,

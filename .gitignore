@@ -12,6 +12,7 @@ docker/.env
 docker/volumes/
 
 # local env files
+.env
 .env.local
 .env.*.local
 

@@ -3,8 +3,8 @@ const mockFs = require('mock-fs')
 const destinationManagerLib = require('../../../../lib/sync/destinationManager')
 const pino = require('pino')
 const EventEmitter = require('events')
-const knex = require('knex')
 const { setUp, makeTableName } = require('../../../../lib/stats/setUp')
+const { createRandomTestDb, dropAndDestroyTestDb } = require('../../../lib/db')
 
 const statsSyncLib = require('../../../../lib/stats/sync')
 
@@ -14,8 +14,6 @@ describe('stats/sync', () => {
   let testLogger
   let eventEmitter
 
-  const testDbName = 'mymls_test'
-  const connectionString = `mysql://user1:password1@localhost:33033/${testDbName}`
   const mlsSourceName = 'myMlsSource'
   const platformAdapterName = 'bridgeInteractive'
   const userConfig = {
@@ -35,15 +33,12 @@ describe('stats/sync', () => {
   const flushInternalConfig = () => {}
   const configBundle = { userConfig, internalConfig, flushInternalConfig }
 
-  beforeAll(() => {
-    db = knex({
-      client: 'mysql2',
-      connection: connectionString,
-    })
+  beforeAll(async () => {
+    db = await createRandomTestDb()
   })
 
-  afterAll(() => {
-    db.destroy()
+  afterAll(async () => {
+    await dropAndDestroyTestDb(db)
   })
 
   beforeEach(async () => {
