@@ -14,7 +14,6 @@ describe('stats/sync', () => {
   let eventEmitter
 
   const mlsSourceName = 'myMlsSource'
-  const platformAdapterName = 'bridgeInteractive'
   const userConfig = {
     sources: {
       myMlsSource: {
@@ -24,7 +23,12 @@ describe('stats/sync', () => {
             name: 'Property',
           },
         ],
-        destinations: [],
+        destinations: [
+          {
+            name: 'my_destination',
+            type: 'devnull',
+          },
+        ],
       },
     },
   }
@@ -98,5 +102,10 @@ describe('stats/sync', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0].sync_sources_id).toEqual(syncSourcesRecord.id)
     expect(rows[0].name).toEqual('Property')
+    const syncResourcesRecord = rows[0]
+    rows = await db.select('*').from(makeTableName('sync_destinations'))
+    expect(rows).toHaveLength(1)
+    expect(rows[0].sync_resources_id).toEqual(syncResourcesRecord.id)
+    expect(rows[0].name).toEqual('my_destination')
   })
 })
