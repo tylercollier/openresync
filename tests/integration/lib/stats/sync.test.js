@@ -22,6 +22,9 @@ describe('stats/sync', () => {
           {
             name: 'Property',
           },
+          {
+            name: 'Member',
+          },
         ],
         destinations: [
           {
@@ -52,17 +55,21 @@ describe('stats/sync', () => {
     testLogger = new pino({ level: 'silent' })
     eventEmitter = new EventEmitter()
 
-    const fileContents = JSON.stringify({
+    const fileContentsProperty = JSON.stringify({
       '@odata.count': 1,
       value: [{
-        ListingId: 'abc',
-        ListingKey: 'abckey',
-        ListingKeyNumeric: 123,
-        PublicRemarks: 'It is a great house',
+        ListingId: 'listing1',
+      }],
+    })
+    const fileContentsMember = JSON.stringify({
+      '@odata.count': 1,
+      value: [{
+        MemberId: 'member1',
       }],
     })
     mockFs({
-      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContents,
+      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsProperty,
+      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Member/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsMember,
     })
 
     destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, testLogger)
@@ -90,7 +97,7 @@ describe('stats/sync', () => {
     // overall it's better to have this automated test and easier than running it by hand,
     // so I should figure out how to categorize it into some batch so it's not lumped in
     // with other tests that are meant to be fast, but we can still get plenty of value out of it.
-    await new Promise(resolve => setTimeout(resolve, 200))
+    await new Promise(resolve => setTimeout(resolve, 2200))
 
     let rows
 
@@ -102,16 +109,21 @@ describe('stats/sync', () => {
     const syncSourcesRecord = rows[0]
 
     rows = await db.select('*').from(makeTableName('sync_resources'))
-    expect(rows).toHaveLength(1)
+    expect(rows).toHaveLength(2)
     expect(rows[0].sync_sources_id).toEqual(syncSourcesRecord.id)
     expect(rows[0].name).toEqual('Property')
     expect(rows[0].is_done).toEqual(1)
     const syncResourcesRecord = rows[0]
 
     rows = await db.select('*').from(makeTableName('sync_destinations'))
-    expect(rows).toHaveLength(1)
+    // I was using some number OTHER than 2 here so that Jest would show me the contents
+    // of the array easily and I could see that the sync_resources_id of the second record was
+    // not correct.
+    expect(rows).toHaveLength(99)
     expect(rows[0].sync_resources_id).toEqual(syncResourcesRecord.id)
     expect(rows[0].name).toEqual('my_destination')
     expect(rows[0].is_done).toEqual(1)
+
+    expect(rows[1].sync_resources_id).toEqual(2)
   })
 })
