@@ -2,7 +2,7 @@ const knex = require('knex')
 const crypto = require('crypto')
 
 // Can be useful if you're doing a single test and want to observe the data after the test has run
-const forceSingleDb = true
+const forceSingleDb = false
 
 async function createRandomTestDb() {
   let testDbName
@@ -29,11 +29,10 @@ async function createRandomTestDb() {
 }
 
 async function dropAndDestroyTestDb(db) {
-  if (forceSingleDb) {
-    return
+  if (!forceSingleDb) {
+    const testDbName = db.client.database()
+    await db.raw(`DROP DATABASE ${testDbName}`)
   }
-  const testDbName = db.client.database()
-  await db.raw(`DROP DATABASE ${testDbName}`)
   db.destroy()
 }
 
