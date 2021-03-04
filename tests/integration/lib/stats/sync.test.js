@@ -83,21 +83,16 @@ describe('stats/sync', () => {
   test('the event emitter emits and we listen and write to the database', async () => {
     const statsSync = statsSyncLib(db)
     statsSync.listen(eventEmitter)
+
+    // Listen to the done event, and wait a short amount of time
+    // in which we expect our stats sync to the db to be done. Seems to work great.
+    const p = new Promise(resolve => {
+      eventEmitter.on('ors:sync.done', () => setTimeout(resolve, 100))
+    })
+
     await destinationManager.resumeSync()
 
-    // This timeout ensures we don't end the test before the event emitter callback is finished.
-    // That event emitter callback uses the db object, so it makes sense if it'd behave weirdly
-    // (crashes the test runner) if we kill the db connection while it's in use.
-    // The odd thing is the following tests (database checks) (almost) always seem to pass,
-    // so I wouldn't think that destroying the db connection would cause a problem. But it does.
-    //     Update: I question whether my tests were passing as only a day or two later did I write
-    //             the code that would make the tests pass.
-    // My lesson learned here is that this isn't really a good idea for automated testing in
-    // the traditional sense, and the way we're solving it makes the test slow. However,
-    // overall it's better to have this automated test and easier than running it by hand,
-    // so I should figure out how to categorize it into some batch so it's not lumped in
-    // with other tests that are meant to be fast, but we can still get plenty of value out of it.
-    await new Promise(resolve => setTimeout(resolve, 2200))
+    await p
 
     let rows
 
@@ -126,7 +121,5 @@ describe('stats/sync', () => {
     expect(rows[1].sync_resources_id).toEqual(syncResourcesRecord2.id)
     expect(rows[1].name).toEqual('my_destination')
     expect(rows[1].is_done).toEqual(1)
-
-    expect(rows[1].sync_resources_id).toEqual(2)
   })
 })
