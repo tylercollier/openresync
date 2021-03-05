@@ -55,10 +55,16 @@ describe('stats/sync', () => {
     testLogger = new pino({ level: 'silent' })
     eventEmitter = new EventEmitter()
 
-    const fileContentsProperty = JSON.stringify({
+    const fileContentsProperty1 = JSON.stringify({
       '@odata.count': 1,
       value: [{
         ListingId: 'listing1',
+      }],
+    })
+    const fileContentsProperty2 = JSON.stringify({
+      '@odata.count': 1,
+      value: [{
+        ListingId: 'listing2',
       }],
     })
     const fileContentsMember = JSON.stringify({
@@ -68,7 +74,8 @@ describe('stats/sync', () => {
       }],
     })
     mockFs({
-      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsProperty,
+      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsProperty1,
+      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-44-000Z.json': fileContentsProperty2,
       '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Member/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsMember,
     })
 
@@ -117,9 +124,9 @@ describe('stats/sync', () => {
     expect(rows).toHaveLength(2)
     expect(rows[0].sync_resources_id).toEqual(syncResourcesRecord1.id)
     expect(rows[0].name).toEqual('my_destination')
-    expect(rows[0].is_done).toEqual(1)
+    expect(rows[0].num_records_synced).toEqual(2)
     expect(rows[1].sync_resources_id).toEqual(syncResourcesRecord2.id)
     expect(rows[1].name).toEqual('my_destination')
-    expect(rows[1].is_done).toEqual(1)
+    expect(rows[1].num_records_synced).toEqual(1)
   })
 })
