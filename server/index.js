@@ -15,6 +15,7 @@ const typeDefs = gql`
   
   type Mutation {
     mutation1(postId: Int): Int
+    mutation2(postId: Int): Int
   }
   
   type Subscription {
@@ -33,6 +34,7 @@ const books = [
   },
 ];
 
+let intervalId
 const resolvers = {
   Query: {
     books: () => books,
@@ -40,8 +42,9 @@ const resolvers = {
   Mutation: {
     mutation1: (root, args, context) => {
       let count = 0
-      setInterval(() => {
+      intervalId = setInterval(() => {
         count++
+        console.log('count', count)
         pubsub.publish('subscription1', {
           subscription1: {
             title: 'Tyler Rules ' + count,
@@ -51,12 +54,18 @@ const resolvers = {
       }, 3000)
       return 7
     },
+    mutation2: () => {
+      clearInterval(intervalId)
+    },
   },
   Subscription: {
     subscription1: {
       subscribe: () => {
         console.log('subscription thing is happening!')
         return pubsub.asyncIterator(['subscription1'])
+      },
+      unsubscribe: () => {
+        console.log('unsubscribed!')
       },
     },
   },
@@ -76,5 +85,5 @@ const server = new ApolloServer({
 });
 
 server.listen(config.server.port).then(({url}) => {
-  console.log(`🚀  Server ready at ${url}`);
+  console.log(`🚀 Server ready at ${url}`);
 });

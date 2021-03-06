@@ -13,13 +13,19 @@
       </div>
       <div class="flex-1">
         Here's the rest
+        <div>
+          <HelloWorld/>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import HelloWorld from './HelloWorld'
 export default {
-
+  components: {
+    HelloWorld,
+  },
 }
 </script>
