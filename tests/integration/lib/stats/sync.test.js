@@ -4,6 +4,7 @@ const pino = require('pino')
 const EventEmitter = require('events')
 const { setUp, makeTableName } = require('../../../../lib/stats/setUp')
 const { createRandomTestDb, dropAndDestroyTestDb } = require('../../../lib/db')
+const moment = require('moment')
 
 const statsSyncLib = require('../../../../lib/stats/sync')
 
@@ -12,6 +13,8 @@ describe('stats/sync', () => {
   let destinationManager
   let testLogger
   let eventEmitter
+  let internalConfig
+  let configBundle
 
   const mlsSourceName = 'myMlsSource'
   const userConfig = {
@@ -35,9 +38,7 @@ describe('stats/sync', () => {
       },
     },
   }
-  const internalConfig = {}
   const flushInternalConfig = () => {}
-  const configBundle = { userConfig, internalConfig, flushInternalConfig }
 
   beforeAll(async () => {
     db = await createRandomTestDb()
@@ -79,7 +80,6 @@ describe('stats/sync', () => {
       '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Member/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsMember,
     })
 
-    destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, testLogger)
   })
 
   afterEach(() => {
@@ -87,46 +87,103 @@ describe('stats/sync', () => {
     destinationManager.closeConnections()
   })
 
-  test('the event emitter emits and we listen and write to the database', async () => {
-    const statsSync = statsSyncLib(db)
-    statsSync.listen(eventEmitter)
-
-    // Listen to the done event, and wait a short amount of time
-    // in which we expect our stats sync to the db to be done. Seems to work great.
-    const p = new Promise(resolve => {
-      eventEmitter.on('ors:sync.done', () => setTimeout(resolve, 100))
+  describe('success', () => {
+    beforeEach(() => {
+      internalConfig = {}
+      configBundle = { userConfig, internalConfig, flushInternalConfig }
+      destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, testLogger)
     })
 
-    await destinationManager.resumeSync()
+    test('the event emitter emits and we listen and write to the database', async () => {
+      const statsSync = statsSyncLib(db)
+      statsSync.listen(eventEmitter)
 
-    await p
+      // Listen to the done event, and wait a short amount of time
+      // in which we expect our stats sync to the db to be done. Seems to work great.
+      const p = new Promise(resolve => {
+        eventEmitter.on('ors:sync.done', () => setTimeout(resolve, 100))
+      })
 
-    let rows
+      await destinationManager.resumeSync()
 
-    rows = await db.select('*').from(makeTableName('sync_sources'))
-    expect(rows).toHaveLength(1)
-    expect(rows[0].name).toEqual('myMlsSource')
-    expect(rows[0].batch_id).toEqual('2021-02-18-T-06-24-07-623Z')
-    expect(rows[0].is_done).toEqual(1)
-    const syncSourcesRecord = rows[0]
+      await p
 
-    rows = await db.select('*').from(makeTableName('sync_resources'))
-    expect(rows).toHaveLength(2)
-    expect(rows[0].sync_sources_id).toEqual(syncSourcesRecord.id)
-    expect(rows[0].name).toEqual('Property')
-    expect(rows[0].is_done).toEqual(1)
-    const syncResourcesRecord1 = rows[0]
-    expect(rows[1].name).toEqual('Member')
-    expect(rows[1].is_done).toEqual(1)
-    const syncResourcesRecord2 = rows[1]
+      let rows
 
-    rows = await db.select('*').from(makeTableName('sync_destinations'))
-    expect(rows).toHaveLength(2)
-    expect(rows[0].sync_resources_id).toEqual(syncResourcesRecord1.id)
-    expect(rows[0].name).toEqual('my_destination')
-    expect(rows[0].num_records_synced).toEqual(2)
-    expect(rows[1].sync_resources_id).toEqual(syncResourcesRecord2.id)
-    expect(rows[1].name).toEqual('my_destination')
-    expect(rows[1].num_records_synced).toEqual(1)
+      rows = await db.select('*').from(makeTableName('sync_sources'))
+      expect(rows).toHaveLength(1)
+      expect(rows[0].name).toEqual('myMlsSource')
+      expect(rows[0].batch_id).toEqual('2021-02-18-T-06-24-07-623Z')
+      expect(rows[0].result).toEqual('success')
+      const syncSourcesRecord = rows[0]
+
+      rows = await db.select('*').from(makeTableName('sync_resources'))
+      expect(rows).toHaveLength(2)
+      expect(rows[0].sync_sources_id).toEqual(syncSourcesRecord.id)
+      expect(rows[0].name).toEqual('Property')
+      expect(rows[0].is_done).toEqual(1)
+      const syncResourcesRecord1 = rows[0]
+      expect(rows[1].name).toEqual('Member')
+      expect(rows[1].is_done).toEqual(1)
+      const syncResourcesRecord2 = rows[1]
+
+      rows = await db.select('*').from(makeTableName('sync_destinations'))
+      expect(rows).toHaveLength(2)
+      expect(rows[0].sync_resources_id).toEqual(syncResourcesRecord1.id)
+      expect(rows[0].name).toEqual('my_destination')
+      expect(rows[0].num_records_synced).toEqual(2)
+      expect(rows[1].sync_resources_id).toEqual(syncResourcesRecord2.id)
+      expect(rows[1].name).toEqual('my_destination')
+      expect(rows[1].num_records_synced).toEqual(1)
+    })
+  })
+
+  describe('error', () => {
+    beforeEach(() => {
+      internalConfig = {
+        sources: {
+          [mlsSourceName]: {
+            processSyncBatch: {
+              batchTimestamp: '2021-02-18T06:24:07.623Z',
+              mlsResourcesStatus: [
+                {
+                  name: 'Property',
+                  currentFilePath: '/fake/file/path',
+                  done: false,
+                },
+              ],
+            },
+          },
+        },
+      }
+      configBundle = { userConfig, internalConfig, flushInternalConfig }
+      destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, testLogger)
+    })
+
+    test('captures errors', async () => {
+      const statsSync = statsSyncLib(db)
+      statsSync.listen(eventEmitter)
+
+      // Listen to the event, and wait a short amount of time
+      // in which we expect our stats sync to the db to be done. Seems to work great.
+      const p = new Promise(resolve => {
+        eventEmitter.on('ors:sync.error', () => setTimeout(resolve, 100))
+      })
+
+      try {
+        await destinationManager.resumeSync()
+      } catch (error) {}
+
+      await p
+
+      let rows
+
+      rows = await db.select('*').from(makeTableName('sync_sources'))
+      expect(rows).toHaveLength(1)
+      expect(rows[0].name).toEqual('myMlsSource')
+      expect(rows[0].batch_id).toEqual('2021-02-18-T-06-24-07-623Z')
+      expect(rows[0].result).toEqual('error')
+      expect(rows[0].result).not.toBe(null)
+    })
   })
 })
