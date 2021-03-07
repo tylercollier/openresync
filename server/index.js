@@ -4,69 +4,29 @@ const config = require('../lib/config').buildUserConfig()
 const pubsub = new PubSub()
 
 const typeDefs = gql`
-  type Book {
-    title: String
-    author: String
+  type Source {
+    name: String!
+  }
+  
+  type UserConfig {
+    sources: [Source!]!
   }
 
   type Query {
-    books: [Book]
-  }
-  
-  type Mutation {
-    mutation1(postId: Int): Int
-    mutation2(postId: Int): Int
-  }
-  
-  type Subscription {
-    subscription1: Book
+    userConfig(name: String): UserConfig
   }
 `;
 
-const books = [
-  {
-    title: 'The Awakening',
-    author: 'Kate Chopin',
-  },
-  {
-    title: 'City of Glass',
-    author: 'Paul Auster',
-  },
-];
-
-let intervalId
 const resolvers = {
   Query: {
-    books: () => books,
-  },
-  Mutation: {
-    mutation1: (root, args, context) => {
-      let count = 0
-      intervalId = setInterval(() => {
-        count++
-        console.log('count', count)
-        pubsub.publish('subscription1', {
-          subscription1: {
-            title: 'Tyler Rules ' + count,
-            author: 'T$',
-          }
-        })
-      }, 3000)
-      return 7
-    },
-    mutation2: () => {
-      clearInterval(intervalId)
-    },
-  },
-  Subscription: {
-    subscription1: {
-      subscribe: () => {
-        console.log('subscription thing is happening!')
-        return pubsub.asyncIterator(['subscription1'])
-      },
-      unsubscribe: () => {
-        console.log('unsubscribed!')
-      },
+    userConfig: () => {
+      return {
+        sources: [{
+          name: 'source1',
+        }, {
+          name: 'source2',
+        }],
+      }
     },
   },
 };
@@ -79,7 +39,7 @@ const server = new ApolloServer({
   subscriptions: {
     path: '/subscriptions',
     onConnect: async (connectionParams, webSocket) => {
-      console.log('subscription onConnect')
+      // console.log('subscription onConnect')
     },
   },
 });

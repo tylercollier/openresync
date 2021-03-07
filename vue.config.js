@@ -11,4 +11,19 @@ module.exports = {
       },
     },
   },
+  // Allows ApolloQuery Vue components to use gql. See: https://apollo.vuejs.org/guide/components/query.html#query-gql-tag
+  chainWebpack: config => {
+    config.module
+      .rule('vue')
+      .use('vue-loader')
+      .loader('vue-loader')
+      .tap(options => {
+        options.transpileOptions = {
+          transforms: {
+            dangerousTaggedTemplateString: true,
+          },
+        }
+        return options
+      })
+  },
 }
