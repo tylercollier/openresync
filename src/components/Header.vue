@@ -1,30 +1,43 @@
 <template>
-  <div>
+  <div class="flex justify-between items-end py-2 px-4 bg-blue-100">
     <h1 class="text-4xl">Openresync</h1>
-    <div>
-      <div>Navigation</div>
-      <div class="w-64 flex justify-around">
-        <div class="mr-4">
-          <router-link to="/dashboard">Dashboard</router-link>
-        </div>
-        <div v-for="source of sources" :key="source.name" class="mr-4">
-          <router-link :to="`/sources/${source.name}`">{{source.name}}</router-link>
-        </div>
+    <div class="flex">
+      <div class="mr-4">
+        <router-link to="/dashboard">Dashboard</router-link>
       </div>
+      <VueSelect
+        style="width: 250px"
+        :options="sources"
+        label="name"
+        :value="selectedSource"
+        @input="goToSource"
+        :clearable="false"
+        placeholder="MLS Source"
+      />
     </div>
   </div>
 </template>
 
 <script>
+import VueSelect from 'vue-select'
+
 export default {
   props: {
     sources: Array,
+    sourceName: String,
   },
-  data() {
-    console.log('this.sources', this.sources)
-    return {
-      
-    }
+  methods: {
+    goToSource(value) {
+      this.$router.push({ path: `/sources/${value.name}` })
+    },
+  },
+  computed: {
+    selectedSource() {
+      return this.sources.find(x => x.name === this.sourceName)
+    },
+  },
+  components: {
+    VueSelect,
   },
 }
 </script>

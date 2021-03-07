@@ -9,3 +9,7 @@
     color: steelblue;
   }
 }
+
+.v-select * {
+  cursor: pointer;
+}

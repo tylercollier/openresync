@@ -8,18 +8,18 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 import { split } from 'apollo-link'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
-import './assets/tailwind.css'
 import router from './routes'
 
-const httpLink = createHttpLink()
+import './assets/tailwind.css'
+import 'vue-select/dist/vue-select.css'
 
+const httpLink = createHttpLink()
 const wsLink = new WebSocketLink({
   uri: `ws://${location.host}/subscriptions`,
   options: {
     reconnect: true,
   },
 })
-
 // using the ability to split links, you can send data to each link
 // depending on what kind of operation is being sent
 const link = split(
@@ -32,14 +32,11 @@ const link = split(
   wsLink,
   httpLink
 )
-
 const cache = new InMemoryCache()
-
 const apolloClient = new ApolloClient({
   link,
   cache,
 })
-
 Vue.use(VueApollo)
 const apolloProvider = new VueApollo({
   defaultClient: apolloClient,

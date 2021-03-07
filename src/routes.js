@@ -5,7 +5,7 @@ import Source from './components/Source'
 
 const routes = [
   { path: '/', redirect: '/dashboard' },
-  { path: '', component: Layout, children: [
+  { path: '', component: Layout, props: true, children: [
     { path: '/dashboard', component: Dashboard },
     { path: '/sources/:sourceName', component: Source, props: true },
   ]},

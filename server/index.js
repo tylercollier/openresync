@@ -13,7 +13,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    userConfig(name: String): UserConfig
+    userConfig: UserConfig
   }
 `;
 

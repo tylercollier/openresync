@@ -2,27 +2,21 @@
   <div>
     <ApolloQuery
       :query="gql => gql`
-        query UserConfig ($name: String) {
-          userConfig (name: $name) {
+        query UserConfig {
+          userConfig {
             sources {
               name
             }
           }
         }
       `"
-      :variables="{ name }"
     >
       <template v-slot="{ result: { loading, error, data } }">
         <div v-if="loading">Loading...</div>
-        <!-- Error -->
         <div v-else-if="error" class="error apollo">An error occurred</div>
-
-        <!-- Result -->
         <div v-else-if="data">
-          <Header :sources="data.userConfig.sources"/>
+          <Header :sources="data.userConfig.sources" :source-name="sourceName"/>
         </div>
-
-        <!-- No result -->
         <div v-else class="no-result apollo">No result :(</div>
       </template>
     </ApolloQuery>
@@ -33,10 +27,8 @@
 import Header from './Header'
 
 export default {
-  data() {
-    return {
-      name: 'tyler',
-    }
+  props: {
+    sourceName: String,
   },
   components: {
     Header,
