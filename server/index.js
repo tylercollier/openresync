@@ -1,5 +1,5 @@
 const {ApolloServer, gql, PubSub} = require('apollo-server')
-const config = require('../lib/config').buildUserConfig()
+const userConfig = require('../lib/config').buildUserConfig()
 
 const pubsub = new PubSub()
 
@@ -20,13 +20,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     userConfig: () => {
-      return {
-        sources: [{
-          name: 'source1',
-        }, {
-          name: 'source2',
-        }],
-      }
+      return userConfig
     },
   },
 };
@@ -44,6 +38,6 @@ const server = new ApolloServer({
   },
 });
 
-server.listen(config.server.port).then(({url}) => {
+server.listen(userConfig.server.port).then(({url}) => {
   console.log(`🚀 Server ready at ${url}`);
 });
