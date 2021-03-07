@@ -17,15 +17,14 @@ const top = 0
 
 function makeDownloader(mlsResources) {
   const userConfig = {
-    sources: {
-      aborTrestle: {
-        platformAdapterName: 'trestle',
-        getReplicationEndpoint: mlsResourceObj => {
-          return `https://api-prod.corelogic.com/trestle/odata/${mlsResourceObj.name}?replication=true`
-        },
-        mlsResources,
+    sources: [{
+      name: 'aborTrestle',
+      platformAdapterName: 'trestle',
+      getReplicationEndpoint: mlsResourceObj => {
+        return `https://api-prod.corelogic.com/trestle/odata/${mlsResourceObj.name}?replication=true`
       },
-    },
+      mlsResources,
+    }],
   }
   const configBundle = { userConfig, internalConfig, flushInternalConfig }
   const downloader = downloaderLib('aborTrestle', configBundle, testEmitter, testLogger)

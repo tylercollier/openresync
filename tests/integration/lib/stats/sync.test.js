@@ -18,8 +18,9 @@ describe('stats/sync', () => {
 
   const mlsSourceName = 'myMlsSource'
   const userConfig = {
-    sources: {
-      myMlsSource: {
+    sources: [
+      {
+        name: 'myMlsSource',
         platformAdapterName: 'bridgeInteractive',
         mlsResources: [
           {
@@ -36,7 +37,7 @@ describe('stats/sync', () => {
           },
         ],
       },
-    },
+    ],
   }
   const flushInternalConfig = () => {}
 
@@ -146,20 +147,19 @@ describe('stats/sync', () => {
     beforeEach(() => {
       // Force an error to be thrown by an invalid currentFilePath.
       internalConfig = {
-        sources: {
-          [mlsSourceName]: {
-            processSyncBatch: {
-              batchTimestamp: '2021-02-18T06:24:07.623Z',
-              mlsResourcesStatus: [
-                {
-                  name: 'Property',
-                  currentFilePath: '/fake/file/path',
-                  done: false,
-                },
-              ],
-            },
+        sources: [{
+          name: mlsSourceName,
+          processSyncBatch: {
+            batchTimestamp: '2021-02-18T06:24:07.623Z',
+            mlsResourcesStatus: [
+              {
+                name: 'Property',
+                currentFilePath: '/fake/file/path',
+                done: false,
+              },
+            ],
           },
-        },
+        }],
       }
       doSharedSetup()
     })
