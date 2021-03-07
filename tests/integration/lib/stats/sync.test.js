@@ -144,6 +144,7 @@ describe('stats/sync', () => {
 
   describe('error', () => {
     beforeEach(() => {
+      // Force an error to be thrown by an invalid currentFilePath.
       internalConfig = {
         sources: {
           [mlsSourceName]: {
