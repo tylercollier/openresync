@@ -3,3 +3,9 @@
 @tailwind components;
 
 @tailwind utilities;
+
+@layer base {
+  a {
+    color: steelblue;
+  }
+}

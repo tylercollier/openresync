@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import VueApollo from 'vue-apollo'
+import VueRouter from 'vue-router'
 import { ApolloClient } from 'apollo-client'
 import { createHttpLink } from 'apollo-link-http'
 import { InMemoryCache } from 'apollo-cache-inmemory'
@@ -8,6 +9,7 @@ import { split } from 'apollo-link'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
 import './assets/tailwind.css'
+import router from './routes'
 
 const httpLink = createHttpLink()
 
@@ -43,9 +45,12 @@ const apolloProvider = new VueApollo({
   defaultClient: apolloClient,
 })
 
+Vue.use(VueRouter)
+
 Vue.config.productionTip = false
 
 new Vue({
   render: h => h(App),
+  router,
   apolloProvider,
 }).$mount('#app')
