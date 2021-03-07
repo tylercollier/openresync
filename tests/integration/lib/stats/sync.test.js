@@ -87,11 +87,15 @@ describe('stats/sync', () => {
     destinationManager.closeConnections()
   })
 
+  function doSharedSetup() {
+    configBundle = { userConfig, internalConfig, flushInternalConfig }
+    destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, testLogger)
+  }
+
   describe('success', () => {
     beforeEach(() => {
       internalConfig = {}
-      configBundle = { userConfig, internalConfig, flushInternalConfig }
-      destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, testLogger)
+      doSharedSetup()
     })
 
     test('the event emitter emits and we listen and write to the database', async () => {
@@ -156,8 +160,7 @@ describe('stats/sync', () => {
           },
         },
       }
-      configBundle = { userConfig, internalConfig, flushInternalConfig }
-      destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, testLogger)
+      doSharedSetup()
     })
 
     test('captures errors', async () => {
