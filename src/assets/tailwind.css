@@ -13,3 +13,7 @@
 .v-select * {
   cursor: pointer;
 }
+
+table.striped > tbody > tr:nth-child(odd) {
+  background: #eee;
+}

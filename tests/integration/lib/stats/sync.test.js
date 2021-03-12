@@ -5,6 +5,7 @@ const EventEmitter = require('events')
 const { setUp, makeTableName } = require('../../../../lib/stats/setUp')
 const { createRandomTestDb, dropAndDestroyTestDb } = require('../../../lib/db')
 const moment = require('moment')
+const { Model } = require('objection')
 
 const statsSyncLib = require('../../../../lib/stats/sync')
 
@@ -140,6 +141,106 @@ describe('stats/sync', () => {
       expect(rows[1].sync_resources_id).toEqual(syncResourcesRecord2.id)
       expect(rows[1].name).toEqual('my_destination')
       expect(rows[1].num_records_synced).toEqual(1)
+
+      Model.knex(db)
+      class SyncSource extends Model {
+        static get tableName() {
+          return 'ors_sync_sources'
+        }
+
+        static get relationMappings() {
+          return {
+            resources: {
+              relation: Model.HasManyRelation,
+              modelClass: SyncResource,
+              join: {
+                from: 'ors_sync_sources.id',
+                to: 'ors_sync_resources.sync_sources_id',
+              },
+            },
+          }
+        }
+      }
+      class SyncResource extends Model {
+        static get tableName() {
+          return 'ors_sync_resources'
+        }
+
+        static get relationMappings() {
+          return {
+            source: {
+              relation: Model.BelongsToOneRelation,
+              modelClass: SyncSource,
+              join: {
+                from: 'ors_sync_resources.sync_sources_id',
+                to: 'ors_sync_sources.id',
+              },
+            },
+            destinations: {
+              relation: Model.HasManyRelation,
+              modelClass: SyncDestination,
+              join: {
+                from: 'ors_sync_resources.id',
+                to: 'ors_sync_destinations.sync_resources_id',
+              },
+            },
+          }
+        }
+      }
+      class SyncDestination extends Model {
+        static get tableName() {
+          return 'ors_sync_destinations'
+        }
+
+        static get relationMappings() {
+          return {
+            resource: {
+              relation: Model.BelongsToOneRelation,
+              modelClass: SyncResource,
+              join: {
+                from: 'ors_sync_destinations.sync_resources_id',
+                to: 'ors_sync_resources.id',
+              },
+            },
+          }
+        }
+      }
+
+      const stats = await SyncSource.query()
+        // .withGraphFetched('[resources, resources.destinations]')
+        .withGraphFetched({
+          resources: {
+            destinations: true,
+          },
+        })
+      console.log('something', JSON.stringify(stats, null, 2))
+
+      // const getLastInsertId = trx => trx.raw(`SELECT LAST_INSERT_ID()`)
+      //   .then(([rows]) => rows[0]['LAST_INSERT_ID()'])
+      // await db.transaction(async trx => {
+      //   await trx.table(makeTableName('sync_sources')).insert({
+      //     name: 'sup',
+      //     batch_id: 'xyz',
+      //   })
+      //   let id
+      //   id = await getLastInsertId(trx)
+      //   await trx.table(makeTableName('sync_resources')).insert({
+      //     sync_sources_id: id,
+      //     name: 'sup',
+      //     is_done: true,
+      //   })
+      //   id = await getLastInsertId(trx)
+      //   await trx.table(makeTableName('sync_destinations')).insert({
+      //     sync_resources_id: id,
+      //     name: 'sup',
+      //     num_records_synced: 999,
+      //   })
+      // })
+      // const x = await db(makeTableName('sync_sources'))
+      //   .join(makeTableName('sync_resources'), `${makeTableName('sync_sources')}.id`, `${makeTableName('sync_resources')}.sync_sources_id`)
+      //   .join(makeTableName('sync_destinations'), `${makeTableName('sync_resources')}.id`, `${makeTableName('sync_destinations')}.sync_resources_id`)
+      //   .select('ors_sync_sources.*', 'ors_sync_resources.*', 'ors_sync_destinations.*')
+      // console.log('x', x)
     })
   })
 

@@ -1,4 +1,8 @@
 const config = require('./lib/config').buildUserConfig()
+const MomentLocalesPlugin = require('moment-locales-webpack-plugin')
+const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
+
+const currentYear = new Date().getFullYear()
 
 module.exports = {
   devServer: {
@@ -25,5 +29,15 @@ module.exports = {
         }
         return options
       })
+    config
+      .plugin('MomentLocalesPlugin')
+      .use(new MomentLocalesPlugin())
+    config
+      .plugin('MomentTimezoneDataPlugin')
+      .use(new MomentTimezoneDataPlugin({
+        matchZones: /^America/,
+        startYear: currentYear - 1,
+        endYear: currentYear + 1,
+      }))
   },
 }
