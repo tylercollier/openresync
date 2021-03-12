@@ -15,8 +15,9 @@ module.exports = {
       },
     },
   },
-  // Allows ApolloQuery Vue components to use gql. See: https://apollo.vuejs.org/guide/components/query.html#query-gql-tag
   chainWebpack: config => {
+    // Allows ApolloQuery Vue components to use gql.
+    // See: https://apollo.vuejs.org/guide/components/query.html#query-gql-tag
     config.module
       .rule('vue')
       .use('vue-loader')
@@ -29,6 +30,8 @@ module.exports = {
         }
         return options
       })
+
+    // Slim down the mammoth moment-timezone
     config
       .plugin('MomentLocalesPlugin')
       .use(new MomentLocalesPlugin())

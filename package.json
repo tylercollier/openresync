@@ -8,7 +8,7 @@
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "test": "TZ=UTC jest",
-    "storybook": "start-storybook -p 6006",
+    "storybook": "start-storybook -p 6006 --host storybook.openresync.test --ci",
     "build-storybook": "build-storybook"
   },
   "main": "server/index.js",
