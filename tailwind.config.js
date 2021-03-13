@@ -2,4 +2,10 @@
 // I can problem delete this comment later when things have been working for a while.
 module.exports = {
   purge: { content: ['./public/**/*.html', './src/**/*.vue'] },
+  variants: {
+    extend: {
+      backgroundColor: ['active'],
+      outline: ['focus-visible'],
+    },
+  },
 }

@@ -13,6 +13,9 @@
   },
   "main": "server/index.js",
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.34",
+    "@fortawesome/free-solid-svg-icons": "^5.15.2",
+    "@fortawesome/vue-fontawesome": "^2.0.2",
     "@tailwindcss/postcss7-compat": "^2.0.3",
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",

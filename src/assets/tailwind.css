@@ -5,6 +5,10 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    @apply focus:outline-none;
+  }
+
   a {
     color: steelblue;
   }
