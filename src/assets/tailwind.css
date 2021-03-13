@@ -17,3 +17,11 @@
 table.striped > tbody > tr:nth-child(odd) {
   background: #eee;
 }
+
+.success {
+  @apply text-green-600;
+}
+
+.error {
+  @apply text-red-600;
+}
