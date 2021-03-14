@@ -23,7 +23,7 @@
               <td>{{ history.error }}</td>
               <td>{{ getDisplayDatetime(history.created_at) }}</td>
               <td>{{ getDisplayDatetime(history.updated_at) }}</td>
-              <td><button @click="expand(index)">Expand</button></td>
+              <td><b-button @click="expand(index)" variant="outline-secondary" size="sm">More</b-button></td>
             </tr>
             <template v-if="index in expanded">
               <!-- We add an extra hidden row so the colors of our extra row below matches its "parent" in a striped table -->
