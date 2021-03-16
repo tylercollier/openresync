@@ -9,10 +9,9 @@ import { split } from 'apollo-link'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
 import router from './routes'
-import '../lib/fontawesome/init'
 
-import './assets/tailwind.css'
 import 'vue-select/dist/vue-select.css'
+import './assets/index.scss'
 
 const httpLink = createHttpLink()
 const wsLink = new WebSocketLink({

@@ -5,11 +5,9 @@
 </template>
 
 <script>
-import SyncStats from './SyncStats'
 
 export default {
   components: {
-    SyncStats,
   },
 }
 </script>

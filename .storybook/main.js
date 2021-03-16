@@ -9,24 +9,12 @@ module.exports = {
     "@storybook/addon-links",
     "@storybook/addon-essentials"
   ],
-  // Add Tailwind. I got this from: https://stackoverflow.com/a/65709909/135101
   webpackFinal: async config => {
     config.module.rules.push({
-      test: /\.css$/,
-      use: [
-        {
-          loader: 'postcss-loader',
-          options: {
-            ident: 'postcss',
-            plugins: [
-              require('tailwindcss'),
-              require('autoprefixer'),
-            ],
-          },
-        },
-      ],
+      test: /\.scss$/,
+      use: ['style-loader', 'css-loader', 'sass-loader'],
       include: pathLib.resolve(__dirname, '../'),
-    })
+    });
     return config
   },
 }
