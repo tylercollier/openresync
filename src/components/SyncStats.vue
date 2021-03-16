@@ -4,7 +4,7 @@
     <div v-else>
       <div v-for="mlsSource of historyStats" :key="mlsSource.name">
         <h2>{{ mlsSource.name }}</h2>
-        <table class="striped">
+        <b-table-simple small striped hover>
           <thead>
           <tr>
             <th>Batch timestamp</th>
@@ -12,7 +12,7 @@
             <th>Error</th>
             <th>Started</th>
             <th>Ended</th>
-            <th></th>
+            <th>Actions</th>
           </tr>
           </thead>
           <tbody>
@@ -45,7 +45,7 @@
             </template>
           </template>
           </tbody>
-        </table>
+        </b-table-simple>
       </div>
     </div>
   </div>

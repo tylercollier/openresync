@@ -18,10 +18,6 @@
   cursor: pointer;
 }
 
-table.striped > tbody > tr:nth-child(odd) {
-  background: #eee;
-}
-
 .success {
   @apply text-green-600;
 }
