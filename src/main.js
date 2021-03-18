@@ -13,6 +13,7 @@ import './components/index'
 
 import 'vue-select/dist/vue-select.css'
 import './assets/tailwind.css'
+import '../lib/bootstrap/init'
 import './assets/index.scss'
 
 const httpLink = createHttpLink()
