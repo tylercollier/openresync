@@ -27,14 +27,14 @@
             </tr>
             <template v-if="index in expanded">
               <!-- We add an extra hidden row so the colors of our extra row below matches its "parent" in a striped table -->
-              <tr class="hidden">
+              <tr class="tw-hidden">
               </tr>
               <tr>
                 <td colspan="6">
-                  <div v-for="resource of history.resources" :key="resource.id" class="ml-4">
+                  <div v-for="resource of history.resources" :key="resource.id" class="tw-ml-4">
                     <h3>{{resource.name}}</h3>
                     <div>Done: {{resource.is_done}}</div>
-                    <div v-for="destination of resource.destinations" :key="destination.id" class="ml-4">
+                    <div v-for="destination of resource.destinations" :key="destination.id" class="tw-ml-4">
                       <h4>{{destination.name}}</h4>
                       <div>Records synced: {{destination.num_records_synced}}</div>
                     </div>

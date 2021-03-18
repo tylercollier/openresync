@@ -1,8 +1,8 @@
 <template>
-  <div class="flex justify-between items-end py-2 px-4 bg-blue-100">
-    <h1 class="text-4xl">Openresync</h1>
-    <div class="flex">
-      <div class="mr-4">
+  <div class="tw-flex tw-justify-between tw-items-end tw-py-2 tw-px-4 tw-bg-blue-100">
+    <h1 class="tw-text-4xl">Openresync</h1>
+    <div class="tw-flex">
+      <div class="tw-mr-4">
         <router-link to="/dashboard">Dashboard</router-link>
       </div>
       <VueSelect

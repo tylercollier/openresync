@@ -12,7 +12,7 @@ import router from './routes'
 import './components/index'
 
 import 'vue-select/dist/vue-select.css'
-import './assets/tailwind.scss'
+import './assets/tailwind.css'
 import './assets/index.scss'
 
 const httpLink = createHttpLink()

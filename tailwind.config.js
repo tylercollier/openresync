@@ -9,4 +9,5 @@ module.exports = {
       outline: ['focus-visible'],
     },
   },
+  prefix: 'tw-',
 }

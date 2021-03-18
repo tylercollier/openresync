@@ -1,15 +1,15 @@
 <template>
-  <button v-on="$listeners" class="border py-2 px-4 rounded-md" :class="classes">
-    <font-awesome-icon v-if="spinner && iconPosition === 'left'" icon="spinner" spin></font-awesome-icon>
+  <button v-on="$listeners" class="tw-border tw-py-2 tw-px-4 tw-rounded-md" :class="classes">
+    <b-spinner v-if="spinner && iconPosition === 'left'" small></b-spinner>
     <slot name="icon" v-if="!spinner && icon && iconPosition === 'left'">
-      <font-awesome-icon :icon="icon"></font-awesome-icon>
+      <b-icon :icon="icon"></b-icon>
     </slot>
     <slot>
       Submit
     </slot>
-    <font-awesome-icon v-if="spinner && iconPosition === 'right'" icon="spinner" spin></font-awesome-icon>
+    <b-spinner v-if="spinner && iconPosition === 'right'" small></b-spinner>
     <slot name="icon" v-if="!spinner && icon && iconPosition === 'right'">
-      <font-awesome-icon :icon="icon"></font-awesome-icon>
+      <b-icon :icon="icon"></b-icon>
     </slot>
   </button>
 </template>
@@ -34,9 +34,9 @@ export default {
   computed: {
     classes() {
       if (this.primary) {
-        return 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white border-white'
+        return 'tw-bg-blue-500 hover:tw-bg-blue-600 active:tw-bg-blue-700 tw-text-white tw-border-white'
       } else {
-        return 'border-gray-800 hover:bg-gray-200 active:bg-gray-300'
+        return 'tw-border-gray-800 hover:tw-bg-gray-200 active:tw-bg-gray-300'
       }
     },
   },
