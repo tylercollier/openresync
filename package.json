@@ -13,6 +13,7 @@
   },
   "main": "server/index.js",
   "dependencies": {
+    "@tailwindcss/postcss7-compat": "^2.0.4",
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",
     "apollo-link": "^1.2.14",
@@ -40,8 +41,10 @@
     "pino": "^6.11.0",
     "postcss": "^7.0.35",
     "progress": "^2.0.3",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.4",
     "vue": "^2.6.11",
     "vue-apollo": "^3.0.5",
+    "vue-cli-plugin-tailwind": "^2.0.6",
     "vue-router": "^3.5.1",
     "vue-select": "^3.11.2",
     "xml2js": "^0.4.23"
