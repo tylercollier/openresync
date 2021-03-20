@@ -34,6 +34,10 @@ async function createRandomTestDb({ forcedDbName } = {}) {
   return db
 }
 
+function createQaDb() {
+  return createRandomTestDb({ forcedDbName: 'qa' })
+}
+
 async function dropAndDestroyTestDb(db) {
   if (!forceSingleDb) {
     const testDbName = db.client.database()
@@ -45,4 +49,5 @@ async function dropAndDestroyTestDb(db) {
 module.exports = {
   createRandomTestDb,
   dropAndDestroyTestDb,
+  createQaDb,
 }

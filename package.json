@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "TZ=UTC nodemon --watch server/ --watch lib/",
+    "dev": "TZ=UTC nodemon --watch server/ --watch lib/ --watch tests/qa",
     "dev:debug": "TZ=UTC nodemon --inspect-brk --watch server/ --watch lib/",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
