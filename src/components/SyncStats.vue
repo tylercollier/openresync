@@ -1,9 +1,9 @@
 <template>
   <div>
-    <div v-if="!historyStats.length">No stats</div>
+    <div v-if="!stats.length">No stats</div>
     <div v-else>
-      <div v-for="mlsSource of historyStats" :key="mlsSource.name">
-        <h2>{{ mlsSource.name }}</h2>
+      <div>
+        <h2>{{ stats[0].name }}</h2>
         <b-table-simple small striped hover>
           <thead>
           <tr>
@@ -16,22 +16,22 @@
           </tr>
           </thead>
           <tbody>
-          <template v-for="(history, index) of mlsSource.history">
-            <tr :key="index">
-              <td>{{ getDisplayDatetime(convertBatchIdToTimestamp(history.batch_id)) }}</td>
-              <td :class="{ 'text-success': history.result === 'success', 'text-danger': history.result === 'error' }">{{ history.result }}</td>
-              <td>{{ history.error }}</td>
-              <td>{{ getDisplayDatetime(history.created_at) }}</td>
-              <td>{{ getDisplayDatetime(history.updated_at) }}</td>
-              <td><b-button @click="expand(index)" variant="outline-secondary" size="sm">More</b-button></td>
+          <template v-for="syncSource of stats">
+            <tr :key="syncSource.id">
+              <td>{{ getDisplayDatetime(convertBatchIdToTimestamp(syncSource.batch_id)) }}</td>
+              <td :class="{ 'text-success': syncSource.result === 'success', 'text-danger': syncSource.result === 'error' }">{{ syncSource.result }}</td>
+              <td>{{ syncSource.error }}</td>
+              <td>{{ getDisplayDatetime(syncSource.created_at) }}</td>
+              <td>{{ getDisplayDatetime(syncSource.updated_at) }}</td>
+              <td><b-button @click="expand(syncSource.id)" variant="outline-secondary" size="sm">More</b-button></td>
             </tr>
-            <template v-if="index in expanded">
+            <template v-if="syncSource.id in expanded">
               <!-- We add an extra hidden row so the colors of our extra row below matches its "parent" in a striped table -->
-              <tr class="tw-hidden">
+              <tr class="tw-hidden" :key="syncSource.id + 'a'">
               </tr>
-              <tr>
+              <tr :key="syncSource.id + 'b'">
                 <td colspan="6">
-                  <div v-for="resource of history.resources" :key="resource.id" class="tw-ml-4">
+                  <div v-for="resource of syncSource.resources" :key="resource.id" class="tw-ml-4">
                     <h3>{{resource.name}}</h3>
                     <div>Done: {{resource.is_done}}</div>
                     <div v-for="destination of resource.destinations" :key="destination.id" class="tw-ml-4">
@@ -55,7 +55,7 @@ import { getDisplayDatetime, convertBatchIdToTimestamp } from '../../lib/sync/ut
 
 export default {
   props: {
-    historyStats: Array,
+    stats: Array,
   },
   data() {
     return {
@@ -65,12 +65,12 @@ export default {
     }
   },
   methods: {
-    expand(index) {
-      if (index in this.expanded) {
-        this.$delete(this.expanded, index)
+    expand(sourceId) {
+      if (sourceId in this.expanded) {
+        this.$delete(this.expanded, sourceId)
         return
       }
-      this.$set(this.expanded, index, true)
+      this.$set(this.expanded, sourceId, true)
     },
   },
 }

@@ -2,12 +2,18 @@ const knex = require('knex')
 const crypto = require('crypto')
 
 // Can be useful if you're doing a single test and want to observe the data after the test has run
-const forceSingleDb = false
+let forceSingleDb = false
 
-async function createRandomTestDb() {
+async function createRandomTestDb({ forcedDbName } = {}) {
+  if (forcedDbName) {
+    forceSingleDb = true
+  }
+
   let testDbName
   testDbName = 'test_' + crypto.randomBytes(5).toString('hex')
-  if (forceSingleDb) {
+  if (forcedDbName) {
+    testDbName = forcedDbName
+  } else if (forceSingleDb) {
     testDbName = 'test_db'
   }
 
