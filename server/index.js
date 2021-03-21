@@ -103,6 +103,7 @@ const server = new ApolloServer({
 
 async function setUpQaScenario() {
   await statsScenario()
+  console.log('Done setting up scenario')
 }
 
 async function startServer() {

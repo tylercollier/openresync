@@ -8,8 +8,7 @@ export default {
   component: Button,
 }
 
-const Template = (args, { argTypes, loaded }) => {
-  console.log('loaded', loaded)
+const Template = (args, { argTypes }) => {
   return {
     props: Object.keys(argTypes),
     components: { Button },

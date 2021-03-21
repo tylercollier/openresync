@@ -8,7 +8,7 @@ export default {
   component: StatsOverview,
 }
 
-const localMakeStory = args => makeStory(Template, args)
+const localMakeStory = (...rest) => makeStory(Template, ...rest)
 
 const Template = (args, { argTypes, loaded }) => {
   merge(args, loaded)
@@ -22,17 +22,4 @@ const Template = (args, { argTypes, loaded }) => {
 
 export const NoData = localMakeStory({
   stats: [],
-  y: 9,
-})
-NoData.loaders = [
-  async () => {
-    // console.log('im here2')
-    return {
-      x: await new Promise(resolve => setTimeout(() => resolve({ name: 'tyler' }), 500)),
-    }
-  },
-]
-
-export const SomeData = localMakeStory({
-  stats: syncSourceDataSet1.reverse(),
 })

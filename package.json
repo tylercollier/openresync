@@ -10,7 +10,8 @@
     "lint": "vue-cli-service lint",
     "test": "TZ=UTC jest",
     "storybook": "start-storybook -p 6006 --host storybook.openresync.test --ci",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "qa-server": "TZ=UTC nodemon --watch tests/qa/ --watch lib/ tests/qa/server/index.js"
   },
   "main": "server/index.js",
   "dependencies": {
@@ -62,10 +63,12 @@
     "@vue/cli-service": "~4.5.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.2",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
+    "express": "^4.17.1",
     "jest": "^26.6.3",
     "mock-fs": "^4.13.0",
     "nodemon": "^2.0.6",

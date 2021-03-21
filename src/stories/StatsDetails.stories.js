@@ -2,7 +2,7 @@ import StatsDetails from '../components/StatsDetails'
 import { makeStory } from './lib/utils'
 import moment from 'moment'
 
-const localMakeStory = args => makeStory(Template, args)
+const localMakeStory = (...rest) => makeStory(Template, ...rest)
 
 export default {
   title: 'StatsDetails',

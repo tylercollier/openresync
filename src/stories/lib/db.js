@@ -1,13 +1,12 @@
-const config = require('../../../lib/config')
 const { SyncSource } = require('../../../lib/models/index')
 const { Model } = require('objection')
 const knex = require('knex')
 const { setUp } = require('../../../lib/stats/setUp')
-const { createQaDb } = require('../../lib/db')
+const { createRandomTestDb } = require('../../../tests/lib/db')
 const { syncSourceDataSet1 } = require('../../fixtures/syncStats')
 
 async function go() {
-  const db = await createQaDb()
+  const db = await createRandomTestDb()
   Model.knex(db)
 
   try {
