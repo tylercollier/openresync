@@ -1,7 +1,7 @@
 import StatsOverview from '../components/StatsOverview'
-import StatsOverviewWrapper from '../components/StatsOverviewWrapper'
 import { makeStory } from './lib/utils'
 import { syncSourceDataSet1 } from '../../tests/fixtures/syncStats'
+import merge from 'lodash/merge'
 
 export default {
   title: 'StatsOverview',
@@ -11,27 +11,14 @@ export default {
 const localMakeStory = args => makeStory(Template, args)
 
 const Template = (args, { argTypes, loaded }) => {
-  console.log('loaded', loaded)
+  merge(args, loaded)
   return {
     props: Object.keys(argTypes),
     components: {StatsOverview},
-    data() {
-      return {
-        loaded,
-      }
-    },
-    beforeMount() {
-      // console.log('this.$props', this.$props)
-      // console.log('this.$data', this.$data)
-      // this.tyler = loaded
-    },
     template:
-      `<StatsOverview v-bind="$props" :x="loaded.x" />`,
+      `<StatsOverview v-bind="$props" />`,
   }
 }
-// const Template = (args, { argTypes, loaded }) => {
-//   return StatsOverviewWrapper
-// }
 
 export const NoData = localMakeStory({
   stats: [],

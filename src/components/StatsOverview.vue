@@ -3,6 +3,7 @@
     <div>Stats overview</div>
     <div>x: {{x}}</div>
     <div>y: {{y}}</div>
+    <div>z: {{z}}</div>
   </div>
 </template>
 
@@ -12,6 +13,7 @@ export default {
     stats: Array,
     x: Object,
     y: Number,
+    z: String,
   },
 }
 </script>
