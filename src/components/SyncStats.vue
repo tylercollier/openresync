@@ -18,7 +18,7 @@
           <tbody>
           <template v-for="syncSource of stats">
             <tr :key="syncSource.id">
-              <td>{{ getDisplayDatetime(convertBatchIdToTimestamp(syncSource.batch_id)) }}</td>
+              <td>{{ getDisplayDatetime(convertBatchIdToTimestamp(syncSource.batch_id)) }}x{{syncSource.id}}</td>
               <td :class="{ 'text-success': syncSource.result === 'success', 'text-danger': syncSource.result === 'error' }">{{ syncSource.result }}</td>
               <td>{{ syncSource.error }}</td>
               <td>{{ getDisplayDatetime(syncSource.created_at) }}</td>
