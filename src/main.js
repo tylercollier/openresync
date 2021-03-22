@@ -39,6 +39,15 @@ const cache = new InMemoryCache()
 const apolloClient = new ApolloClient({
   link,
   cache,
+  // no-cache stuff doesn't seem to take effect here. Why not? So, I'm forcing fetch-policy="no-cache" in QueryLoader.
+  // defaultOptions: {
+  //   watchQuery: {
+  //     fetchPolicy: 'no-cache',
+  //   },
+  //   query: {
+  //     fetchPolicy: 'no-cache',
+  //   },
+  // },
 })
 Vue.use(VueApollo)
 const apolloProvider = new VueApollo({

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <ApolloQuery
+    <QueryLoader
       :query="gql => gql`
         query UserConfig {
           userConfig {
@@ -11,20 +11,16 @@
         }
       `"
     >
-      <template v-slot="{ result: { loading, error, data } }">
-        <div v-if="loading">Loading...</div>
-        <div v-else-if="error" class="error apollo">An error occurred</div>
-        <div v-else-if="data">
-          <Header :sources="data.userConfig.sources" :source-name="sourceName"/>
-        </div>
-        <div v-else class="no-result apollo">No result :(</div>
+      <template v-slot="data">
+        <Header :sources="data.userConfig.sources" :source-name="sourceName"/>
       </template>
-    </ApolloQuery>
+    </QueryLoader>
   </div>
 </template>
 
 <script>
 import Header from './Header'
+import QueryLoader from './QueryLoader'
 
 export default {
   props: {
@@ -32,6 +28,7 @@ export default {
   },
   components: {
     Header,
+    QueryLoader,
   },
 }
 </script>

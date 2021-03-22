@@ -1,6 +1,6 @@
 <template>
   <div>
-    <ApolloQuery
+    <QueryLoader
       :query="gql => gql`
         query SyncStats($sourceName: String) {
           syncStats(sourceName: $sourceName) {
@@ -30,25 +30,25 @@
       `"
       :variables="{ sourceName }"
     >
-      <template v-slot="{ result: { loading, error, data } }">
-        <div v-if="loading">Loading...</div>
-        <div v-else-if="error" class="error apollo">An error occurred</div>
-        <div v-else-if="data">
-          <slot :stats="data.syncStats" />
-        </div>
-        <div v-else class="no-result apollo">No result :(</div>
+      <template v-slot="data">
+        <slot :stats="data.syncStats" />
       </template>
-    </ApolloQuery>
+    </QueryLoader>
   </div>
 </template>
 
 <script>
+import QueryLoader from './QueryLoader'
+
 export default {
   props: {
     sourceName: {
       type: String,
       required: false,
     },
+  },
+  components: {
+    QueryLoader,
   },
 }
 </script>

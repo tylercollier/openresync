@@ -69,7 +69,7 @@ const typeDefs = gql`
 const resolvers = {
   // (parent, args, context, info)
   Query: {
-    userConfig: () => {
+    userConfig: async () => {
       return userConfig
     },
     syncStats: async (parent, args) => {
