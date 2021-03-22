@@ -2,6 +2,7 @@ import StatsOverview from '../components/StatsOverview'
 import { makeStory } from './lib/utils'
 import { syncSourceDataSet1 } from '../../tests/fixtures/syncStats'
 import merge from 'lodash/merge'
+import axios from "axios";
 
 export default {
   title: 'StatsOverview',
@@ -22,4 +23,14 @@ const Template = (args, { argTypes, loaded }) => {
 
 export const NoData = localMakeStory({
   stats: [],
+})
+
+export const SomeData = localMakeStory(null, {
+  loaders: [
+    async () => ({
+      stats: await axios({
+        url: 'http://localhost:4001/qa/stats2',
+      }).then(response => response.data),
+    }),
+  ],
 })

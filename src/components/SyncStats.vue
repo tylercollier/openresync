@@ -3,7 +3,12 @@
     <div v-if="!stats.length">No stats</div>
     <div v-else>
       <div>
-        <h2>{{ stats[0].name }}</h2>
+        <div v-if="showHeader" class="tw-flex tw-justify-between">
+          <h2>{{ stats[0].name }}</h2>
+          <div>
+            <router-link :to="{ name: 'source', params: { sourceName: stats[0].name } }">View</router-link>
+          </div>
+        </div>
         <b-table-simple small striped hover>
           <thead>
           <tr>
@@ -56,6 +61,7 @@ import { getDisplayDatetime, convertBatchIdToTimestamp } from '../../lib/sync/ut
 export default {
   props: {
     stats: Array,
+    showHeader: Boolean,
   },
   data() {
     return {

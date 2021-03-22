@@ -5,8 +5,10 @@ const { Model } = require('objection')
 const knex = require('knex')
 const { setUp } = require('../lib/stats/setUp')
 const statsScenario = require('../tests/qa/scenarios/stats')
+const { syncSourceDataSet1, syncSourceDataSet2 } = require('../tests/fixtures/syncStats')
 const { typeDefs: graphqlScalarTypeDefs, resolvers: graphqlScalarResolvers } = require('graphql-scalars')
 const { makeExecutableSchema } = require('@graphql-tools/schema')
+const _ = require('lodash')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -60,22 +62,35 @@ const typeDefs = gql`
 
   type Query {
     userConfig: UserConfig
-    syncStats: [SyncSource!]!
+    syncStats(sourceName: String): [SyncSource!]!
   }
 `
 
 const resolvers = {
+  // (parent, args, context, info)
   Query: {
     userConfig: () => {
       return userConfig
     },
-    syncStats: async () => {
-      return await SyncSource.query()
-        .withGraphFetched({
-          resources: {
-            destinations: true,
-          },
-        })
+    syncStats: async (parent, args) => {
+      function getStatsForSource(sourceName) {
+        return SyncSource.query()
+          .where({ name: sourceName })
+          .orderBy(['created_at'], 'desc')
+          .limit(3)
+          .withGraphFetched({
+            resources: {
+              destinations: true,
+            },
+          })
+      }
+
+      if (args.sourceName) {
+        return getStatsForSource(args.sourceName)
+      }
+
+      const data = await Promise.all(userConfig.sources.map(x => getStatsForSource(x.name)))
+      return _.flatMap(data)
     },
   },
 }
@@ -102,7 +117,7 @@ const server = new ApolloServer({
 })
 
 async function setUpQaScenario() {
-  await statsScenario()
+  await statsScenario(syncSourceDataSet2)
   console.log('Done setting up scenario')
 }
 

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "TZ=UTC nodemon --watch server/ --watch lib/ --watch tests/qa",
+    "dev": "TZ=UTC nodemon --watch server/ --watch lib/ --watch tests/qa/ --watch tests/fixtures/",
     "dev:debug": "TZ=UTC nodemon --inspect-brk --watch server/ --watch lib/",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -11,7 +11,7 @@
     "test": "TZ=UTC jest",
     "storybook": "start-storybook -p 6006 --host storybook.openresync.test --ci",
     "build-storybook": "build-storybook",
-    "qa-server": "TZ=UTC nodemon --watch tests/qa/ --watch lib/ tests/qa/server/index.js"
+    "qa-server": "TZ=UTC nodemon --watch tests/qa/ --watch tests/fixtures/ --watch lib/ tests/qa/server/index.js"
   },
   "main": "server/index.js",
   "dependencies": {

@@ -1,3 +1,9 @@
-.v-select * {
-  cursor: pointer;
+.v-select {
+  input::placeholder {
+    color: silver;
+  }
+
+  * {
+    cursor: pointer;
+  }
 }

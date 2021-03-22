@@ -7,7 +7,7 @@ const routes = [
   { path: '/', redirect: '/dashboard' },
   { path: '', component: Layout, props: true, children: [
     { path: '/dashboard', component: Dashboard },
-    { path: '/sources/:sourceName', component: Source, props: true },
+    { path: '/sources/:sourceName', component: Source, props: true, name: 'source' },
   ]},
 ]
 

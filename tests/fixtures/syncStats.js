@@ -8,7 +8,7 @@ let id = 1
 
 function makeSyncBatch() {
   return {
-    name: 'myMlsSource',
+    name: 'aborTrestle',
     batch_id: '2021-02-17-T-06-24-07-623Z',
     result: 'error',
     error: 'bad thing happened',
@@ -44,6 +44,21 @@ function makeSet1() {
   ]
 }
 
+function makeSet2() {
+  const set1 = makeSet1()
+  let set2 = makeSet1()
+  set2[0].name = 'aborBridgeInteractive'
+  set2[1].name = 'aborBridgeInteractive'
+  set2 = set2.concat(makeSet1())
+  set2[2].name = 'aborBridgeInteractive'
+  set2[3].name = 'aborBridgeInteractive'
+  const set3 = makeSet1()
+  set3[0].name = 'myMlsSource3'
+  set3[1].name = 'myMlsSource3'
+  return set1.concat(set2).concat(set3)
+}
+
 module.exports = {
   syncSourceDataSet1: makeSet1(),
+  syncSourceDataSet2: makeSet2(),
 }

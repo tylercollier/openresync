@@ -1,13 +1,15 @@
 <template>
   <div>
     <h1 class="text-2xl">{{sourceName}}</h1>
-    <div>some text</div>
-    <SyncStatsContainer />
+    <SyncStatsContainer :source-name="sourceName" v-slot="{ stats }">
+      <SyncStats :stats="stats"/>
+    </SyncStatsContainer>
   </div>
 </template>
 
 <script>
 import SyncStatsContainer from './SyncStatsContainer'
+import SyncStats from './SyncStats'
 
 export default {
   props: {
@@ -15,6 +17,7 @@ export default {
   },
   components: {
     SyncStatsContainer,
+    SyncStats,
   },
 }
 </script>
