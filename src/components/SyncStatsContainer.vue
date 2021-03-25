@@ -2,6 +2,11 @@
   <div>
     <QueryLoader
       :query="gql => gql`
+        fragment databaseRecordFields on DatabaseRecord {
+          created_at
+          updated_at
+        }
+
         query SyncStats($sourceName: String) {
           syncStats(sourceName: $sourceName) {
             id
@@ -9,20 +14,17 @@
             batch_id
             result
             error
-            created_at
-            updated_at
+            ...databaseRecordFields
             resources {
               id
               name
               is_done
-              created_at
-              updated_at
+              ...databaseRecordFields
               destinations {
                 id
                 name
                 num_records_synced
-                created_at
-                updated_at
+                ...databaseRecordFields
               }
             }
           }

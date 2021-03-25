@@ -22,6 +22,11 @@ Model.knex(k)
 const pubsub = new PubSub()
 
 const typeDefs = gql`
+  interface DatabaseRecord {
+    created_at: DateTime!
+    updated_at: DateTime
+  }
+
   type Source {
     name: String!
   }
@@ -30,7 +35,7 @@ const typeDefs = gql`
     sources: [Source!]!
   }
 
-  type SyncDestination {
+  type SyncDestination implements DatabaseRecord{
     id: Int!
     sync_resources_id: Int!
     name: String!
@@ -39,7 +44,7 @@ const typeDefs = gql`
     updated_at: DateTime
   }
 
-  type SyncResource {
+  type SyncResource implements DatabaseRecord {
     id: Int!
     sync_sources_id: Int!
     name: String!
@@ -49,7 +54,7 @@ const typeDefs = gql`
     destinations: [SyncDestination!]!
   }
 
-  type SyncSource {
+  type SyncSource implements DatabaseRecord {
     id: Int!
     name: String!
     batch_id: String!
