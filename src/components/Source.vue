@@ -5,12 +5,14 @@
     <SyncStatsContainer :key="sourceName" :source-name="sourceName" v-slot="{ stats }">
       <SyncStats :stats="stats"/>
     </SyncStatsContainer>
+    <StatsDetailsContainer :source-name="sourceName"/>
   </div>
 </template>
 
 <script>
 import SyncStatsContainer from './SyncStatsContainer'
 import SyncStats from './SyncStats'
+import StatsDetailsContainer from './StatsDetailsContainer'
 
 export default {
   props: {
@@ -19,6 +21,7 @@ export default {
   components: {
     SyncStatsContainer,
     SyncStats,
+    StatsDetailsContainer,
   },
 }
 </script>

@@ -10,7 +10,8 @@ import { getDisplayDatetime } from '../../lib/sync/utils/datetime'
 
 export default {
   props: {
-    datetime: Object,
+    // We expect a moment object or a string like from the database
+    datetime: [Object, String],
   },
   data() {
     return {

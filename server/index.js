@@ -1,5 +1,5 @@
 const { ApolloServer, gql, PubSub } = require('apollo-server')
-const config = require('../lib/config')
+const { buildUserConfig, getMlsSourceUserConfig } = require('../lib/config')
 const { SyncSource } = require('../lib/models/index')
 const { Model } = require('objection')
 const knex = require('knex')
@@ -9,10 +9,13 @@ const { syncSourceDataSet1, syncSourceDataSet2 } = require('../tests/fixtures/sy
 const { typeDefs: graphqlScalarTypeDefs, resolvers: graphqlScalarResolvers } = require('graphql-scalars')
 const { makeExecutableSchema } = require('@graphql-tools/schema')
 const _ = require('lodash')
+const destinationManagerLib = require('../lib/sync/destinationManager')
+const EventEmitter = require('events')
+const pino = require('pino')
 const dotenv = require('dotenv')
 dotenv.config()
 
-const userConfig = config.buildUserConfig()
+const userConfig = buildUserConfig()
 const k = knex({
   client: 'mysql2',
   connection: userConfig.database.connectionString
@@ -64,10 +67,25 @@ const typeDefs = gql`
     updated_at: DateTime
     resources: [SyncResource!]!
   }
+  
+  type StatsDetailsDestination {
+    name: String!
+    num_records: Int!
+    most_recent_at: DateTime
+  }
+
+  type StatsDetailsResource {
+    name: String!
+    num_records_in_mls: Int
+    num_records_updated_at: DateTime
+    most_recent_at: DateTime
+    destinations: [StatsDetailsDestination!]!
+  }
 
   type Query {
     userConfig: UserConfig
     syncStats(sourceName: String): [SyncSource!]!
+    syncStatsDetails(sourceName: String): [StatsDetailsResource!]!
   }
 `
 
@@ -96,6 +114,14 @@ const resolvers = {
 
       const data = await Promise.all(userConfig.sources.map(x => getStatsForSource(x.name)))
       return _.flatMap(data)
+    },
+    syncStatsDetails: async (parent, args) => {
+      const configBundle = { userConfig }
+      const eventEmitter = new EventEmitter()
+      const logger = new pino({ level: 'silent' })
+      const destinationManager = destinationManagerLib(args.sourceName, configBundle, eventEmitter, logger)
+      const data = destinationManager.getStatsDetails()
+      return data
     },
   },
 }
