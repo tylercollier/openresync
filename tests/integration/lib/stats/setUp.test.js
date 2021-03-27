@@ -28,5 +28,9 @@ describe('setUp', () => {
     // console.log('columnInfo', columnInfo)
     // const [rows] = await db.raw(`SHOW INDEX FROM ${makeTableName('sync_sources')}`)
     // console.log('rows', rows)
+
+    expect(await db.schema.hasTable(makeTableName('purge_sources'))).toEqual(true)
+    expect(await db.schema.hasTable(makeTableName('purge_resources'))).toEqual(true)
+    expect(await db.schema.hasTable(makeTableName('purge_destinations'))).toEqual(true)
   })
 })
