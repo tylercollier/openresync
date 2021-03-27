@@ -27,7 +27,6 @@ export const NeverRun = localMakeStory({
       {
         name: 'Property',
         num_records_in_mls: null,
-        num_records_updated_at: null,
         most_recent_at: null,
         destinations: [
           {
@@ -48,7 +47,6 @@ export const Run = localMakeStory({
       {
         name: 'Property',
         num_records_in_mls: 123456,
-        num_records_updated_at: someTimestamp,
         most_recent_at: someTimestamp,
         destinations: [
           {
@@ -66,7 +64,6 @@ export const Run = localMakeStory({
       {
         name: 'Member',
         num_records_in_mls: 98765,
-        num_records_updated_at: someTimestamp,
         most_recent_at: someTimestamp,
         destinations: [
           {

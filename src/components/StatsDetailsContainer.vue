@@ -5,7 +5,6 @@
         syncStatsDetails(sourceName: $sourceName) {
           name
           num_records_in_mls
-          num_records_updated_at
           most_recent_at
           destinations {
             name

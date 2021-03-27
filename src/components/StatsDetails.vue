@@ -3,7 +3,6 @@
     <div v-for="resource of stats" :key="resource.name">
       <h2>{{resource.name}}</h2>
       <div>Records in resource in MLS: {{numRecordsInMls(resource.num_records_in_mls)}}</div>
-      <div>MLS last queried: <display-datetime :datetime="resource.num_records_updated_at" /></div>
       <div>Most recent record: <display-datetime :datetime="resource.most_recent_at" /></div>
       <div v-for="destination of resource.destinations" :key="destination.name" class="tw-ml-4">
         <h3>{{destination.name}}</h3>

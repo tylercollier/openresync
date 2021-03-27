@@ -1,5 +1,5 @@
 const { ApolloServer, gql, PubSub } = require('apollo-server')
-const { buildUserConfig, getMlsSourceUserConfig } = require('../lib/config')
+const { buildUserConfig, getInternalConfig, flushInternalConfig, getMlsSourceUserConfig } = require('../lib/config')
 const { SyncSource } = require('../lib/models/index')
 const { Model } = require('objection')
 const knex = require('knex')
@@ -10,6 +10,7 @@ const { typeDefs: graphqlScalarTypeDefs, resolvers: graphqlScalarResolvers } = r
 const { makeExecutableSchema } = require('@graphql-tools/schema')
 const _ = require('lodash')
 const destinationManagerLib = require('../lib/sync/destinationManager')
+const downloaderLib = require('../lib/sync/downloader')
 const EventEmitter = require('events')
 const pino = require('pino')
 const dotenv = require('dotenv')
@@ -77,7 +78,6 @@ const typeDefs = gql`
   type StatsDetailsResource {
     name: String!
     num_records_in_mls: Int
-    num_records_updated_at: DateTime
     most_recent_at: DateTime
     destinations: [StatsDetailsDestination!]!
   }
@@ -116,11 +116,23 @@ const resolvers = {
       return _.flatMap(data)
     },
     syncStatsDetails: async (parent, args) => {
-      const configBundle = { userConfig }
+      const internalConfig = await getInternalConfig()
+      const configBundle = { userConfig, internalConfig, flushInternalConfig }
       const eventEmitter = new EventEmitter()
       const logger = new pino({ level: 'silent' })
       const destinationManager = destinationManagerLib(args.sourceName, configBundle, eventEmitter, logger)
-      const data = destinationManager.getStatsDetails()
+      const data = await destinationManager.getStatsDetails()
+
+      const downloader = downloaderLib(args.sourceName, configBundle, eventEmitter, logger)
+      const source = getMlsSourceUserConfig(userConfig, args.sourceName)
+      const resourcesCountAndMostRecent = await Promise.all(source.mlsResources.map(mlsResourceObj => {
+        return downloader.fetchCountAndMostRecent(mlsResourceObj)
+      }))
+      data.forEach((datum, i) => {
+        datum.num_records_in_mls = resourcesCountAndMostRecent[i].count
+        datum.most_recent_at = datum.num_records_in_mls > 0 ? resourcesCountAndMostRecent[i].mostRecent.ModificationTimestamp : null
+      })
+
       return data
     },
   },
