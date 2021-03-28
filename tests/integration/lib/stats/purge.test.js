@@ -5,9 +5,9 @@ const EventEmitter = require('events')
 const { setUp, makeTableName } = require('../../../../lib/stats/setUp')
 const { createRandomTestDb, dropAndDestroyTestDb } = require('../../../lib/db')
 const moment = require('moment')
-const statsSyncLib = require('../../../../lib/stats/sync')
+const statsPurgeLib = require('../../../../lib/stats/purge')
 
-describe('stats/sync', () => {
+describe('stats/purge', () => {
   let db
   let destinationManager
   let testLogger
@@ -73,7 +73,7 @@ describe('stats/sync', () => {
     const fileContentsProperty2 = JSON.stringify({
       '@odata.count': 1,
       value: [{
-        ListingId: 'listing2',
+        ListingId: 'listing3',
       }],
     })
     const fileContentsMember = JSON.stringify({
@@ -83,11 +83,10 @@ describe('stats/sync', () => {
       }],
     })
     mockFs({
-      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsProperty1,
-      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-44-000Z.json': fileContentsProperty2,
-      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Member/sync_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsMember,
+      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/purge_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsProperty1,
+      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Property/purge_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-44-000Z.json': fileContentsProperty2,
+      '/home/tylercollier/repos/openresync/config/sources/myMlsSource/downloadedData/Member/purge_batch_2021-02-18-T-06-24-07-623Z_seq_2021-02-20-T-05-21-43-176Z.json': fileContentsMember,
     })
-
   })
 
   afterEach(() => {
@@ -107,46 +106,48 @@ describe('stats/sync', () => {
     })
 
     test('the event emitter emits and we listen and write to the database', async () => {
-      const statsSync = statsSyncLib(db)
-      statsSync.listen(eventEmitter)
+      const statsPurge = statsPurgeLib(db)
+      statsPurge.listen(eventEmitter)
 
       // Listen to the done event, and wait a short amount of time
-      // in which we expect our stats sync to the db to be done. Seems to work great.
+      // in which we expect our stats purge to the db to be done. Seems to work great.
       const p = new Promise(resolve => {
-        eventEmitter.on('ors:sync.done', () => setTimeout(resolve, 100))
+        eventEmitter.on('ors:purge.done', () => setTimeout(resolve, 100))
       })
 
-      await destinationManager.resumeSync()
+      await destinationManager.resumePurge()
 
       await p
 
       let rows
 
-      rows = await db.select('*').from(makeTableName('sync_sources'))
+      rows = await db.select('*').from(makeTableName('purge_sources'))
       expect(rows).toHaveLength(1)
       expect(rows[0].name).toEqual('myMlsSource')
       expect(rows[0].batch_id).toEqual('2021-02-18-T-06-24-07-623Z')
       expect(rows[0].result).toEqual('success')
-      const syncSourcesRecord = rows[0]
+      const purgeSourcesRecord = rows[0]
 
-      rows = await db.select('*').from(makeTableName('sync_resources'))
+      rows = await db.select('*').from(makeTableName('purge_resources'))
       expect(rows).toHaveLength(2)
-      expect(rows[0].sync_sources_id).toEqual(syncSourcesRecord.id)
+      expect(rows[0].purge_sources_id).toEqual(purgeSourcesRecord.id)
       expect(rows[0].name).toEqual('Property')
       expect(rows[0].is_done).toEqual(1)
-      const syncResourcesRecord1 = rows[0]
+      const purgeResourcesRecord1 = rows[0]
       expect(rows[1].name).toEqual('Member')
       expect(rows[1].is_done).toEqual(1)
-      const syncResourcesRecord2 = rows[1]
+      const purgeResourcesRecord2 = rows[1]
 
-      rows = await db.select('*').from(makeTableName('sync_destinations'))
+      rows = await db.select('*').from(makeTableName('purge_destinations'))
       expect(rows).toHaveLength(2)
-      expect(rows[0].sync_resources_id).toEqual(syncResourcesRecord1.id)
+      expect(rows[0].purge_resources_id).toEqual(purgeResourcesRecord1.id)
       expect(rows[0].name).toEqual('my_destination')
-      expect(rows[0].num_records_synced).toEqual(2)
-      expect(rows[1].sync_resources_id).toEqual(syncResourcesRecord2.id)
+      // expect(rows[0].num_records_purged).toEqual(1)
+      // expect(rows[0].ids_purged).toEqual([1])
+      expect(rows[1].purge_resources_id).toEqual(purgeResourcesRecord2.id)
       expect(rows[1].name).toEqual('my_destination')
-      expect(rows[1].num_records_synced).toEqual(1)
+      // expect(rows[1].num_records_purged).toEqual(1)
+      // expect(rows[1].ids_purged).toEqual([1])
     })
   })
 
@@ -156,7 +157,7 @@ describe('stats/sync', () => {
       internalConfig = {
         sources: [{
           name: mlsSourceName,
-          processSyncBatch: {
+          processPurgeBatch: {
             batchTimestamp: '2021-02-18T06:24:07.623Z',
             mlsResourcesStatus: [
               {
@@ -172,24 +173,24 @@ describe('stats/sync', () => {
     })
 
     test('captures errors', async () => {
-      const statsSync = statsSyncLib(db)
-      statsSync.listen(eventEmitter)
+      const statsPurge = statsPurgeLib(db)
+      statsPurge.listen(eventEmitter)
 
       // Listen to the event, and wait a short amount of time
-      // in which we expect our stats sync to the db to be done. Seems to work great.
+      // in which we expect our stats purge to the db to be done. Seems to work great.
       const p = new Promise(resolve => {
-        eventEmitter.on('ors:sync.error', () => setTimeout(resolve, 100))
+        eventEmitter.on('ors:purge.error', () => setTimeout(resolve, 100))
       })
 
       try {
-        await destinationManager.resumeSync()
+        await destinationManager.resumePurge()
       } catch (error) {}
 
       await p
 
       let rows
 
-      rows = await db.select('*').from(makeTableName('sync_sources'))
+      rows = await db.select('*').from(makeTableName('purge_sources'))
       expect(rows).toHaveLength(1)
       expect(rows[0].name).toEqual('myMlsSource')
       expect(rows[0].batch_id).toEqual('2021-02-18-T-06-24-07-623Z')
