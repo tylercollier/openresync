@@ -1,65 +1,181 @@
+// This is a copy of my config file (as of this commit). So it's not documented but you can see
+// real examples of how I'm using it, including making use of JavaScript and programming. As in,
+// showing why the config file is a JS file instead of JSON.
+// In the future it'd be best to have the config documented and show examples.
+
+
+
 const pathLib = require('path')
 
+const aborBridgeInteractive = {
+  getResourceEndpoint: mlsResourceObj => {
+    const endpoint = `https://api.bridgedataoutput.com/api/v2/OData/actris_ref/${mlsResourceObj.name}`
+    const url = new URL(endpoint)
+    // These can be useful subsets for dev purposes
+    if (mlsResourceObj.name === 'Property') {
+      url.searchParams.set('$filter', "City eq 'Georgetown'")
+    } else if (mlsResourceObj.name === 'Member') {
+      url.searchParams.set('$filter', "MemberCity eq 'Georgetown'")
+    }
+    return url.toString()
+  },
+}
 
+const aborTrestle = {
+  getResourceEndpoint: mlsResourceObj => {
+    const endpoint = `https://api-prod.corelogic.com/trestle/odata/${mlsResourceObj.name}`
+    const url = new URL(endpoint)
+    // These can be useful subsets for dev purposes
+    if (mlsResourceObj.name === 'Property') {
+      url.searchParams.set('$filter', "City eq 'Georgetown'")
+    } else if (mlsResourceObj.name === 'Member') {
+      url.searchParams.set('$filter', "MemberCity eq 'Georgetown'")
+    }
+    return url.toString()
+  }
+}
 
-// Reminder: this isn't a great example file currently. It needs to be cleaned up and documented.
-// But I figured it's better to capture what I've got now in case I lose the config.js file,
-// rather than try to recreate it from the code.
-
-
-
-
-module.exports = {
+module.exports = () => ({
   version: '0.1.0',
-  sources: [{
-    name: 'aborBridgeInteractive',
-    clientId: '',
-    clientSecret: '',
-    accessToken: '',
-    metadataEndpoint: 'https://api.bridgedataoutput.com/api/v2/OData/actris_ref/$metadata',
-    // metadataPath is for debugging only. It can be used when you want to read from it instead of the internet.
-    // metadataPath: pathLib.resolve(__dirname, 'sources/abor_bridge_interactive/actris_ref_metadata.xml'),
-    getResourceEndpoint: mlsResourceObj => {
-      return `https://api.bridgedataoutput.com/api/v2/OData/actris_ref/${mlsResourceObj.name}`
-    },
-    getReplicationEndpoint: mlsResourceObj => {
-      return `https://api.bridgedataoutput.com/api/v2/OData/actris_ref/${mlsResourceObj.name}/replication`
-    },
-    getPurgeEndpoint: mlsResourceObj => {
-      return `https://api.bridgedataoutput.com/api/v2/OData/actris_ref/${mlsResourceObj.name}/replication`
-    },
-    top: 2000,
-    topForPurge: 2000,
-    useOrderBy: false,
-    destinations: [
-      {
-        name: 'mysql1',
-        type: 'mysql',
-        config: {
-          connectionString: 'mysql://user1:password1@localhost:33033/mymls',
+  sources: [
+    {
+      name: 'aborBridgeInteractive',
+      clientId: process.env.ABOR_BRIDGE_INTERACTIVE_CLIENT_ID,
+      clientSecret: process.env.ABOR_BRIDGE_INTERACTIVE_CLIENT_SECRET,
+      accessToken: process.env.ABOR_BRIDGE_INTERACTIVE_ACCESS_TOKEN,
+      metadataEndpoint: 'https://api.bridgedataoutput.com/api/v2/OData/actris_ref/$metadata',
+      metadataPath: pathLib.resolve(__dirname, 'sources/abor_bridge_interactive/actris_ref_metadata.xml'),
+      getResourceEndpoint: aborBridgeInteractive.getResourceEndpoint,
+      getReplicationEndpoint: mlsResourceObj => {
+        const resourceEndpoint = aborBridgeInteractive.getResourceEndpoint(mlsResourceObj)
+        const url = new URL(resourceEndpoint)
+        url.pathname += '/replication'
+        return url.toString()
+      },
+      getPurgeEndpoint: (mlsResourceObj, isExpandedMlsResource) => {
+        const resourceEndpoint = aborBridgeInteractive.getResourceEndpoint(mlsResourceObj)
+        const url = new URL(resourceEndpoint)
+        url.pathname += '/replication'
+        if (isExpandedMlsResource) {
+          url.searchParams.delete('$filter')
+        }
+        return url.toString()
+      },
+      top: 2000,
+      topForPurge: 2000,
+      // top: 2,
+      useOrderBy: false,
+      destinations: [
+        {
+          name: 'mysql1',
+          type: 'mysql',
+          config: {
+            connectionString: 'mysql://user1:password1@localhost:33033/mymls_bridge',
 
-          // makeTableName: name => 'mytable' + name,
-          // makeFieldName: name => 'myfield' + name,
+            // These are here basically as a reminder that I could use them.
+            // makeTableName: name => 'tyler' + name,
+            // makeFieldName: name => 'myfield' + name,
+          },
         },
+        // {
+        //   name: 'devnull1',
+        //   type: 'devnull',
+        // },
+      ],
+      platformAdapterName: 'bridgeInteractive',
+      // mlsResources: [
+      //   {
+      //     name: 'Member',
+      //   },
+      // ],
+      // mlsResources: [
+      //   {
+      //     name: 'Property',
+      //   },
+      // ],
+      mlsResources: [
+        {
+          name: 'Member',
+        },
+        {
+          name: 'Property',
+          expand: [
+            {
+              name: 'Media',
+            },
+          ],
+        },
+      ],
+      // mlsResources: ['Member', 'Property'],
+    },
+    {
+      name: 'aborTrestle',
+      metadataEndpoint: 'https://api-prod.corelogic.com/trestle/odata/$metadata',
+      metadataPath: pathLib.resolve(__dirname, 'sources/abor_trestle/austin_metadata_trestle.xml'),
+      getResourceEndpoint: aborTrestle.getResourceEndpoint,
+      getReplicationEndpoint: mlsResourceObj => {
+        const resourceEndpoint = aborTrestle.getResourceEndpoint(mlsResourceObj)
+        const url = new URL(resourceEndpoint)
+        url.searchParams.set('replication', true)
+        return url.toString()
       },
-      {
-        name: 'devnull1',
-        type: 'devnull',
+      getPurgeEndpoint: (mlsResourceObj, isExpandedMlsResource) => {
+        const resourceEndpoint = aborTrestle.getResourceEndpoint(mlsResourceObj)
+        const url = new URL(resourceEndpoint)
+        url.searchParams.set('replication', true)
+        if (isExpandedMlsResource) {
+          url.searchParams.delete('$filter')
+        }
+        return url.toString()
       },
-    ],
-    // Reminder: The Property resource for BridgeInteractive includes Media unless you use $unselect.
-    mlsResources: [
-      {
-        name: 'Member',
-      },
-    ],
-    mlsResources: [
-      {
-        name: 'Property',
-      },
-    ],
-  }],
+      top: 1000,
+      topForPurge: 300000,
+      clientId: process.env.ABOR_TRESTLE_CLIENT_ID,
+      clientSecret: process.env.ABOR_TRESTLE_CLIENT_SECRET,
+      useOrderBy: true,
+      platformAdapterName: 'trestle',
+      mlsResources: [
+        // {
+        //   name: 'Member',
+        // },
+        {
+          name: 'Property',
+          expand: [
+            {
+              name: 'Member',
+              fieldName: 'ListAgent',
+            },
+            {
+              name: 'Media',
+              fieldName: 'Media',
+            },
+          ],
+        },
+      ],
+
+      // These are listed in the Trestle docs but don't show up in the metadata. Hmm.
+      // mlsResources: ['TeamMembers'],
+      // mlsResources: ['Teams'],
+      destinations: [
+        {
+          name: 'mysql1',
+          type: 'mysql',
+          config: {
+            connectionString: 'mysql://user1:password1@localhost:33033/mymls_trestle',
+          },
+        },
+        // {
+        //   name: 'devnull1',
+        //   type: 'devnull',
+        // },
+      ],
+    },
+  ],
   server: {
     // port: 4000,
   },
-}
+  database: {
+    // connectionString: 'mysql://user1:password1@localhost:33033/openresync',
+    connectionString: 'mysql://user1:password1@localhost:33033/qa',
+  },
+})
