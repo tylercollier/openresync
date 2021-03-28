@@ -16,28 +16,6 @@ describe('stats/purge', () => {
   let configBundle
 
   const mlsSourceName = 'myMlsSource'
-  const userConfig = {
-    sources: [
-      {
-        name: 'myMlsSource',
-        platformAdapterName: 'bridgeInteractive',
-        mlsResources: [
-          {
-            name: 'Property',
-          },
-          {
-            name: 'Member',
-          },
-        ],
-        destinations: [
-          {
-            name: 'my_destination',
-            type: 'devnull',
-          },
-        ],
-      },
-    ],
-  }
   const flushInternalConfig = () => {}
 
   beforeAll(async () => {
@@ -60,6 +38,9 @@ describe('stats/purge', () => {
     for (const name of tableNames) {
       await db.schema.dropTableIfExists(makeTableName(name))
     }
+    for (const name of ['Property', 'Member']) {
+      await db.schema.dropTableIfExists(name)
+    }
     await setUp(db)
     testLogger = new pino({ level: 'silent' })
     eventEmitter = new EventEmitter()
@@ -67,19 +48,19 @@ describe('stats/purge', () => {
     const fileContentsProperty1 = JSON.stringify({
       '@odata.count': 1,
       value: [{
-        ListingId: 'listing1',
+        ListingKey: 'listing1',
       }],
     })
     const fileContentsProperty2 = JSON.stringify({
       '@odata.count': 1,
       value: [{
-        ListingId: 'listing3',
+        ListingKey: 'listing3',
       }],
     })
     const fileContentsMember = JSON.stringify({
       '@odata.count': 1,
       value: [{
-        MemberId: 'member1',
+        MemberKey: 'member1',
       }],
     })
     mockFs({
@@ -94,15 +75,55 @@ describe('stats/purge', () => {
     destinationManager.closeConnections()
   })
 
-  function doSharedSetup() {
+  async function doSharedSetup() {
+    const userConfig = {
+      sources: [
+        {
+          name: 'myMlsSource',
+          platformAdapterName: 'bridgeInteractive',
+          mlsResources: [
+            {
+              name: 'Property',
+            },
+            {
+              name: 'Member',
+            },
+          ],
+          destinations: [
+            {
+              name: 'my_destination',
+              type: 'mysql',
+              config: {
+                connectionString: `mysql://user1:password1@localhost:33033/${db.client.database()}`,
+              },
+            },
+          ],
+        },
+      ],
+    }
+    await db.schema.createTable('Property', table => {
+      table.string('ListingKey').notNullable()
+    })
+    await db.table('Property').insert({
+      ListingKey: 'listing1',
+    })
+    await db.table('Property').insert({
+      ListingKey: 'listing2',
+    })
+    await db.schema.createTable('Member', table => {
+      table.string('MemberKey').notNullable()
+    })
+    await db.table('Member').insert({
+      MemberKey: 'member1',
+    })
     configBundle = { userConfig, internalConfig, flushInternalConfig }
     destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, testLogger)
   }
 
   describe('success', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       internalConfig = {}
-      doSharedSetup()
+      await doSharedSetup()
     })
 
     test('the event emitter emits and we listen and write to the database', async () => {
@@ -142,17 +163,17 @@ describe('stats/purge', () => {
       expect(rows).toHaveLength(2)
       expect(rows[0].purge_resources_id).toEqual(purgeResourcesRecord1.id)
       expect(rows[0].name).toEqual('my_destination')
-      // expect(rows[0].num_records_purged).toEqual(1)
-      // expect(rows[0].ids_purged).toEqual([1])
+      expect(rows[0].num_records_purged).toEqual(1)
+      expect(rows[0].ids_purged).toEqual(['listing2'])
       expect(rows[1].purge_resources_id).toEqual(purgeResourcesRecord2.id)
       expect(rows[1].name).toEqual('my_destination')
-      // expect(rows[1].num_records_purged).toEqual(1)
-      // expect(rows[1].ids_purged).toEqual([1])
+      expect(rows[1].num_records_purged).toEqual(0)
+      expect(rows[1].ids_purged).toEqual([])
     })
   })
 
   describe('error', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // Force an error to be thrown by an invalid currentFilePath.
       internalConfig = {
         sources: [{
@@ -169,7 +190,7 @@ describe('stats/purge', () => {
           },
         }],
       }
-      doSharedSetup()
+      await doSharedSetup()
     })
 
     test('captures errors', async () => {
