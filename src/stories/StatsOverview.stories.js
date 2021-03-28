@@ -15,7 +15,9 @@ const Template = (args, { argTypes, loaded }) => {
   merge(args, loaded)
   return {
     props: Object.keys(argTypes),
-    components: {StatsOverview},
+    components: {
+      StatsOverview,
+    },
     template:
       `<StatsOverview v-bind="$props" />`,
   }

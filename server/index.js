@@ -1,11 +1,12 @@
 const { ApolloServer, gql, PubSub } = require('apollo-server')
 const { buildUserConfig, getInternalConfig, flushInternalConfig, getMlsSourceUserConfig } = require('../lib/config')
-const { SyncSource } = require('../lib/models/index')
+const { SyncSource, PurgeSource } = require('../lib/models/index')
 const { Model } = require('objection')
 const knex = require('knex')
 const { setUp } = require('../lib/stats/setUp')
 const statsScenario = require('../tests/qa/scenarios/stats')
-const { syncSourceDataSet1, syncSourceDataSet2 } = require('../tests/fixtures/syncStats')
+const { syncSourceDataSet2 } = require('../tests/fixtures/syncStats')
+const { purgeSourceDataSet1 } = require('../tests/fixtures/purgeStats')
 const { typeDefs: graphqlScalarTypeDefs, resolvers: graphqlScalarResolvers } = require('graphql-scalars')
 const { makeExecutableSchema } = require('@graphql-tools/schema')
 const _ = require('lodash')
@@ -68,7 +69,38 @@ const typeDefs = gql`
     updated_at: DateTime
     resources: [SyncResource!]!
   }
-  
+
+  type PurgeDestination implements DatabaseRecord{
+    id: Int!
+    purge_resources_id: Int!
+    name: String!
+    num_records_purged: Int!
+    ids_purged: [String!]!
+    created_at: DateTime!
+    updated_at: DateTime
+  }
+
+  type PurgeResource implements DatabaseRecord {
+    id: Int!
+    purge_sources_id: Int!
+    name: String!
+    is_done: Boolean!
+    created_at: DateTime!
+    updated_at: DateTime
+    destinations: [PurgeDestination!]!
+  }
+
+  type PurgeSource implements DatabaseRecord {
+    id: Int!
+    name: String!
+    batch_id: String!
+    result: String
+    error: String
+    created_at: DateTime!
+    updated_at: DateTime
+    resources: [PurgeResource!]!
+  }
+
   type StatsDetailsDestination {
     name: String!
     num_records: Int!
@@ -81,10 +113,15 @@ const typeDefs = gql`
     most_recent_at: DateTime
     destinations: [StatsDetailsDestination!]!
   }
+  
+  type SyncStats {
+    sync: [SyncSource!]!
+    purge: [PurgeSource!]!
+  }
 
   type Query {
     userConfig: UserConfig
-    syncStats(sourceName: String): [SyncSource!]!
+    syncStats(sourceName: String): SyncStats!
     syncStatsDetails(sourceName: String): [StatsDetailsResource!]!
   }
 `
@@ -96,8 +133,16 @@ const resolvers = {
       return userConfig
     },
     syncStats: async (parent, args) => {
-      function getStatsForSource(sourceName) {
-        return SyncSource.query()
+      function getStatsForSource(sourceName, type) {
+        let dbType
+        if (type === 'sync') {
+          dbType = SyncSource
+        } else if (type === 'purge') {
+          dbType = PurgeSource
+        } else {
+          throw new Error(`875864567 - invalid type ${type}`)
+        }
+        return dbType.query()
           .where({ name: sourceName })
           .orderBy(['created_at'], 'desc')
           .limit(3)
@@ -109,11 +154,26 @@ const resolvers = {
       }
 
       if (args.sourceName) {
-        return getStatsForSource(args.sourceName)
+        const [s, p] = await Promise.all([
+          getStatsForSource(args.sourceName, 'sync'),
+          getStatsForSource(args.sourceName, 'purge'),
+        ])
+        return {
+          sync: s,
+          purge: p,
+        }
       }
 
-      const data = await Promise.all(userConfig.sources.map(x => getStatsForSource(x.name)))
-      return _.flatMap(data)
+      const [s, p] = await Promise.all([
+        Promise.all(userConfig.sources.map(x => getStatsForSource(x.name, 'sync'))),
+        Promise.all(userConfig.sources.map(x => getStatsForSource(x.name, 'purge'))),
+      ])
+      const syncStats = _.flatMap(s)
+      const purgeStats = _.flatMap(p)
+      return {
+        sync: syncStats,
+        purge: purgeStats,
+      }
     },
     syncStatsDetails: async (parent, args) => {
       const internalConfig = await getInternalConfig()
@@ -160,7 +220,11 @@ const server = new ApolloServer({
 })
 
 async function setUpQaScenario() {
-  await statsScenario(syncSourceDataSet2)
+  const fns = [
+    () => SyncSource.query().insertGraphAndFetch(syncSourceDataSet2),
+    () => PurgeSource.query().insertGraphAndFetch(purgeSourceDataSet1),
+  ]
+  await statsScenario(fns)
   console.log('Done setting up scenario')
 }
 

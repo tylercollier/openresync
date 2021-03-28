@@ -1,6 +1,8 @@
 const express = require('express')
 const statsScenario = require('../scenarios/stats')
-const { syncSourceDataSet1, syncSourceDataSet2 } = require('../../fixtures/syncStats')
+const { syncSourceDataSet2 } = require('../../fixtures/syncStats')
+const { purgeSourceDataSet1 } = require('../../fixtures/purgeStats')
+const { SyncSource, PurgeSource } = require('../../../lib/models/index')
 const pathLib = require('path')
 const cors = require('cors')
 const dotenv = require('dotenv')
@@ -22,8 +24,15 @@ async function startServer() {
   })
 
   app.get('/qa/stats2', async (req, res) => {
-    const data = await statsScenario(syncSourceDataSet2, { useQaDb: false })
-    res.json(data)
+    const fns = [
+      () => SyncSource.query().insertGraphAndFetch(syncSourceDataSet2),
+      () => PurgeSource.query().insertGraphAndFetch(purgeSourceDataSet1),
+    ]
+    const [s, p] = await statsScenario(fns)
+    res.json({
+      sync: s,
+      purge: p,
+    })
   })
 
   app.listen(4001, () => {

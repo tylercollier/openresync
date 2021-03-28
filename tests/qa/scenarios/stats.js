@@ -5,7 +5,7 @@ const knex = require('knex')
 const { setUp } = require('../../../lib/stats/setUp')
 const { createRandomTestDb, createQaDb } = require('../../lib/db')
 
-async function go(input, options = { useQaDb: true }) {
+async function go(inputFns, options = { useQaDb: true }) {
   let db
   if (options.useQaDb) {
     db = await createQaDb()
@@ -17,7 +17,7 @@ async function go(input, options = { useQaDb: true }) {
   try {
     await setUp(db)
 
-    return await SyncSource.query().insertGraphAndFetch(input)
+    return Promise.all(inputFns.map(x => x()))
   } catch (error) {
     db.destroy()
     throw error

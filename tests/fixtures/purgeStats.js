@@ -4,32 +4,34 @@ const _ = require('lodash')
 const testMoment = moment.utc('2021-03-20T12:00:00Z')
 const testDateTime = testMoment.toDate()
 
-function makeSyncBatch() {
+function makePurgeBatch() {
   return {
     name: 'aborTrestle',
     batch_id: '2021-02-17-T-06-24-07-623Z',
     result: 'error',
-    error: 'bad sync happened',
+    error: 'bad purge happened',
     resources: [{
       name: 'Member',
       is_done: true,
       destinations: [{
         name: 'my_destination',
-        num_records_synced: 1,
+        num_records_purged: 1,
+        ids_purged: JSON.stringify(['member1']),
       }]
     }, {
       name: 'Property',
       is_done: true,
       destinations: [{
         name: 'my_destination',
-        num_records_synced: 2,
+        num_records_purged: 2,
+        ids_purged: JSON.stringify(['listing1']),
       }]
     }]
   }
 }
 
 function makeSet1() {
-  const batch = makeSyncBatch()
+  const batch = makePurgeBatch()
   const batch1 = _.cloneDeep(batch)
   const batch2 = _.cloneDeep(batch)
   _.merge(batch2, {
@@ -57,5 +59,5 @@ function makeSet2() {
 }
 
 module.exports = {
-  syncSourceDataSet2: makeSet2(),
+  purgeSourceDataSet1: makeSet2(),
 }

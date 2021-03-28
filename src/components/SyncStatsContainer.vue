@@ -9,22 +9,45 @@
 
         query SyncStats($sourceName: String) {
           syncStats(sourceName: $sourceName) {
-            id
-            name
-            batch_id
-            result
-            error
-            ...databaseRecordFields
-            resources {
+            sync {
               id
               name
-              is_done
+              batch_id
+              result
+              error
               ...databaseRecordFields
-              destinations {
+              resources {
                 id
                 name
-                num_records_synced
+                is_done
                 ...databaseRecordFields
+                destinations {
+                  id
+                  name
+                  num_records_synced
+                  ...databaseRecordFields
+                }
+              }
+            }
+            purge {
+              id
+              name
+              batch_id
+              result
+              error
+              ...databaseRecordFields
+              resources {
+                id
+                name
+                is_done
+                ...databaseRecordFields
+                destinations {
+                  id
+                  name
+                  num_records_purged
+                  ids_purged
+                  ...databaseRecordFields
+                }
               }
             }
           }
