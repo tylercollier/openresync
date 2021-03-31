@@ -3,7 +3,8 @@
     <h1 class="tw-text-4xl">Openresync</h1>
     <div class="tw-flex">
       <div class="tw-mr-4">
-        <router-link to="/dashboard">Dashboard</router-link>
+        <router-link class="tw-mr-2" to="/dashboard">Dashboard</router-link>
+        <router-link to="/cron">Cron</router-link>
       </div>
       <VueSelect
         style="width: 250px"

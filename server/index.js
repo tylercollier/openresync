@@ -14,6 +14,7 @@ const destinationManagerLib = require('../lib/sync/destinationManager')
 const downloaderLib = require('../lib/sync/downloader')
 const EventEmitter = require('events')
 const pino = require('pino')
+const CronJob = require('cron').CronJob
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -118,11 +119,23 @@ const typeDefs = gql`
     sync: [SyncSource!]!
     purge: [PurgeSource!]!
   }
+  
+  type CronSkedj {
+    cronString: String
+    nextDate: DateTime
+  }
+
+  type CronSchedule {
+    sourceName: String!
+    sync: CronSkedj
+    purge: CronSkedj
+  }
 
   type Query {
     userConfig: UserConfig
     syncStats(sourceName: String): SyncStats!
     syncStatsDetails(sourceName: String): [StatsDetailsResource!]!
+    cronSchedules(sourceName: String): [CronSchedule!]!
   }
 `
 
@@ -194,6 +207,35 @@ const resolvers = {
       })
 
       return data
+    },
+    cronSchedules: async (parent, args) => {
+      function getCronSchedule(sourceName) {
+        const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
+        let syncStuff = null
+        if (_.get(sourceConfig, 'cron.sync')) {
+          const job = new CronJob(sourceConfig.cron.sync.cronString, () => {})
+          syncStuff = {
+            cronString: sourceConfig.cron.sync.cronString,
+            nextDate: job.nextDate().toISOString(),
+          }
+        }
+        let purgeStuff = null
+        if (_.get(sourceConfig, 'cron.purge')) {
+          const job = new CronJob(sourceConfig.cron.purge.cronString, () => {})
+          purgeStuff = {
+            cronString: sourceConfig.cron.purge.cronString,
+            nextDate: job.nextDate().toISOString(),
+          }
+        }
+        return {
+          sourceName,
+          sync: syncStuff,
+          purge: purgeStuff,
+        }
+      }
+
+      const sourceNames = args.sourceName ? [args.sourceName] : userConfig.sources.map(x => x.name)
+      return sourceNames.map(getCronSchedule)
     },
   },
 }

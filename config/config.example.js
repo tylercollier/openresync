@@ -106,7 +106,14 @@ module.exports = () => ({
           ],
         },
       ],
-      // mlsResources: ['Member', 'Property'],
+      cron: {
+        sync: {
+          cronString: '0 * * * *',
+        },
+        purge: {
+          cronString: '30 0 * * *',
+        },
+      },
     },
     {
       name: 'aborTrestle',
@@ -169,6 +176,14 @@ module.exports = () => ({
         //   type: 'devnull',
         // },
       ],
+      cron: {
+        sync: {
+          cronString: '15 * * * *',
+        },
+        purge: {
+          cronString: '45 0 * * *',
+        },
+      },
     },
   ],
   server: {
