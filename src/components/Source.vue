@@ -4,7 +4,7 @@
     <!-- Use :key here to force a re-render while we fetch more data -->
     <SyncStatsContainer :key="sourceName" :source-name="sourceName" v-slot="{ stats }">
       <SyncStats :stats="stats.sync"/>
-      <SyncStats :stats="stats.purge"/>
+      <PurgeStats :stats="stats.purge"/>
     </SyncStatsContainer>
     <StatsDetailsContainer :source-name="sourceName"/>
   </div>
@@ -13,6 +13,7 @@
 <script>
 import SyncStatsContainer from './SyncStatsContainer'
 import SyncStats from './SyncStats'
+import PurgeStats from './PurgeStats'
 import StatsDetailsContainer from './StatsDetailsContainer'
 
 export default {
@@ -22,6 +23,7 @@ export default {
   components: {
     SyncStatsContainer,
     SyncStats,
+    PurgeStats,
     StatsDetailsContainer,
   },
 }
