@@ -29,14 +29,18 @@
         <h4>Cron</h4>
         <h5>Sync</h5>
         <CronSchedule
+          v-if="data.cronSchedules[0].sync"
           :cron-string="data.cronSchedules[0].sync.cronString"
           :next-date="data.cronSchedules[0].sync.nextDate"
         />
+        <div v-else>Sync not enabled</div>
         <h5>Purge</h5>
         <CronSchedule
+          v-if="data.cronSchedules[0].purge"
           :cron-string="data.cronSchedules[0].purge.cronString"
           :next-date="data.cronSchedules[0].purge.nextDate"
         />
+        <div v-else>Purge not enabled</div>
       </template>
     </QueryLoader>
   </div>
