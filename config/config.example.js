@@ -70,7 +70,8 @@ module.exports = () => ({
           name: 'mysql1',
           type: 'mysql',
           config: {
-            connectionString: 'mysql://user1:password1@localhost:33033/mymls_bridge',
+            // connectionString: 'mysql://user1:password1@localhost:33033/mymls_bridge',
+            connectionString: 'mysql://user1:password1@localhost:33033/openresync',
 
             // These are here basically as a reminder that I could use them.
             // makeTableName: name => 'tyler' + name,
@@ -107,12 +108,12 @@ module.exports = () => ({
         },
       ],
       cron: {
-        sync: {
-          cronString: '0 * * * *',
-        },
-        purge: {
-          cronString: '30 0 * * *',
-        },
+        // sync: {
+        //   cronString: '0 * * * *',
+        // },
+        // purge: {
+        //   cronString: '30 0 * * *',
+        // },
       },
     },
     {
@@ -168,7 +169,8 @@ module.exports = () => ({
           name: 'mysql1',
           type: 'mysql',
           config: {
-            connectionString: 'mysql://user1:password1@localhost:33033/mymls_trestle',
+            // connectionString: 'mysql://user1:password1@localhost:33033/mymls_trestle',
+            connectionString: 'mysql://user1:password1@localhost:33033/openresync',
           },
         },
         // {
@@ -178,11 +180,11 @@ module.exports = () => ({
       ],
       cron: {
         sync: {
-          cronString: '15 * * * *',
+          cronString: '*/1 * * * *',
         },
-        purge: {
-          cronString: '45 0 * * *',
-        },
+        // purge: {
+        //   cronString: '45 0 * * *',
+        // },
       },
     },
   ],
@@ -190,7 +192,7 @@ module.exports = () => ({
     // port: 4000,
   },
   database: {
-    // connectionString: 'mysql://user1:password1@localhost:33033/openresync',
-    connectionString: 'mysql://user1:password1@localhost:33033/qa',
+    connectionString: 'mysql://user1:password1@localhost:33033/openresync',
+    // connectionString: 'mysql://user1:password1@localhost:33033/qa',
   },
 })
