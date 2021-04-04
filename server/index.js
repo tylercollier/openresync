@@ -15,15 +15,20 @@ const downloaderLib = require('../lib/sync/downloader')
 const EventEmitter = require('events')
 const pino = require('pino')
 const CronJob = require('cron').CronJob
+const pathLib = require('path')
+const moment = require('moment')
+const statsSyncLib = require('../lib/stats/sync')
+const statsPurgeLib = require('../lib/stats/purge')
+
 const dotenv = require('dotenv')
 dotenv.config()
 
 const userConfig = buildUserConfig()
-const k = knex({
+const db = knex({
   client: 'mysql2',
   connection: userConfig.database.connectionString
 })
-Model.knex(k)
+Model.knex(db)
 
 const pubsub = new PubSub()
 
@@ -271,11 +276,95 @@ async function setUpQaScenario() {
 }
 
 async function startServer() {
-  await setUpQaScenario()
+  // await setUpQaScenario()
 
   server.listen(userConfig.server.port).then(({url}) => {
     console.log(`🚀 Server ready at ${url}`);
   })
 }
 
+
+function getCronJobs(internalConfig) {
+  const jobs = []
+  userConfig.sources.forEach(source => {
+    const sourceName = source.name
+    const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
+    const syncCronString = _.get(sourceConfig, 'cron.sync')
+    const purgeCronString = _.get(sourceConfig, 'cron.purge')
+
+    if (syncCronString || purgeCronString) {
+      const eventEmitter = new EventEmitter()
+      const logger = pino({
+        level: 'debug',
+        // I don't care about the hostname, pid
+        base: null,
+        timestamp: pino.stdTimeFunctions.isoTime,
+      }, pino.destination(pathLib.resolve(__dirname, `../logs/${sourceName}.ndjson`)))
+      const configBundle = {
+        userConfig,
+        internalConfig,
+        flushInternalConfig,
+      }
+      const downloader = downloaderLib(sourceName, configBundle, eventEmitter, logger)
+      const destinationManager = destinationManagerLib(sourceName, configBundle, eventEmitter, logger)
+      downloader.setDestinationManager(destinationManager)
+
+      async function doSync() {
+        const metadataString = await downloader.downloadMlsMetadata()
+        await destinationManager.syncMetadata(metadataString)
+
+        await downloader.downloadMlsResources()
+        await destinationManager.resumeSync()
+      }
+
+      async function doPurge() {
+        await downloader.downloadPurgeData()
+        await destinationManager.resumePurge()
+      }
+
+      if (syncCronString) {
+        const cronTime = sourceConfig.cron.sync.cronString
+        // For debugging, start in a few seconds, rather than read the config
+        // const m = moment().add(2, 'seconds')
+        // const cronTime = m.toDate()
+        const job = new CronJob(cronTime, doSync)
+        jobs.push(job)
+        const statsSync = statsSyncLib(db)
+        statsSync.listen(eventEmitter)
+      }
+      if (purgeCronString) {
+        const job = new CronJob(sourceConfig.cron.purge.cronString, doPurge)
+        jobs.push(job)
+        const statsSync = statsPurgeLib(db)
+        statsPurge.listen(eventEmitter)
+      }
+
+      // For debug, to force continuous. Use instead of cron.
+      // (async () => {
+      //   const statsSync = statsSyncLib(db)
+      //   statsSync.listen(eventEmitter)
+      //   while (true) {
+      //     await doSync()
+      //     // logger.debug({ seconds: 5 }, 'Debug wait...')
+      //     // await new Promise(resolve => setTimeout(resolve, 5000))
+      //   }
+      // })()
+    }
+  })
+  return jobs
+}
+
+function startCronJobs(jobs) {
+  jobs.forEach(x => x.start())
+}
+
+async function runCron() {
+  await setUp(db)
+
+  const internalConfig = await getInternalConfig()
+  const jobs = await getCronJobs(internalConfig)
+  startCronJobs(jobs)
+}
+
 startServer()
+runCron()
