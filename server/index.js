@@ -322,33 +322,37 @@ function getCronJobs(internalConfig) {
         await destinationManager.resumePurge()
       }
 
-      if (syncCronString) {
-        const cronTime = sourceConfig.cron.sync.cronString
-        // For debugging, start in a few seconds, rather than read the config
-        // const m = moment().add(2, 'seconds')
-        // const cronTime = m.toDate()
-        const job = new CronJob(cronTime, doSync)
-        jobs.push(job)
-        const statsSync = statsSyncLib(db)
-        statsSync.listen(eventEmitter)
-      }
-      if (purgeCronString) {
-        const job = new CronJob(sourceConfig.cron.purge.cronString, doPurge)
-        jobs.push(job)
-        const statsSync = statsPurgeLib(db)
-        statsPurge.listen(eventEmitter)
-      }
-
-      // For debug, to force continuous. Use instead of cron.
-      // (async () => {
+      // if (syncCronString) {
+      //   const cronTime = sourceConfig.cron.sync.cronString
+      //   // For debugging, start in a few seconds, rather than read the config
+      //   // const m = moment().add(2, 'seconds')
+      //   // const cronTime = m.toDate()
+      //   const job = new CronJob(cronTime, doSync)
+      //   jobs.push(job)
       //   const statsSync = statsSyncLib(db)
       //   statsSync.listen(eventEmitter)
-      //   while (true) {
-      //     await doSync()
-      //     // logger.debug({ seconds: 5 }, 'Debug wait...')
-      //     // await new Promise(resolve => setTimeout(resolve, 5000))
-      //   }
-      // })()
+      // }
+      // if (purgeCronString) {
+      //   const job = new CronJob(sourceConfig.cron.purge.cronString, doPurge)
+      //   jobs.push(job)
+      //   const statsPurge = statsPurgeLib(db)
+      //   statsPurge.listen(eventEmitter)
+      // }
+
+      // For debug, to force continuous. Use instead of cron.
+      (async () => {
+        const statsSync = statsSyncLib(db)
+        statsSync.listen(eventEmitter)
+        const statsPurge = statsPurgeLib(db)
+        statsPurge.listen(eventEmitter)
+
+        // while (true) {
+        //   await doSync()
+        //   // logger.debug({ seconds: 5 }, 'Debug wait...')
+        //   // await new Promise(resolve => setTimeout(resolve, 5000))
+        // }
+        await doPurge()
+      })()
     }
   })
   return jobs

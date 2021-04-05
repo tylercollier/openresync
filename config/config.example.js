@@ -134,6 +134,9 @@ module.exports = () => ({
         if (isExpandedMlsResource) {
           url.searchParams.delete('$filter')
         }
+        if (mlsResourceObj.name === 'Property') {
+          url.searchParams.set('$filter', url.searchParams.get('$filter') + " and not (ListingKey in ('237807220', '241111979'))")
+        }
         return url.toString()
       },
       top: 1000,
@@ -153,10 +156,10 @@ module.exports = () => ({
               name: 'Member',
               fieldName: 'ListAgent',
             },
-            {
-              name: 'Media',
-              fieldName: 'Media',
-            },
+            // {
+            //   name: 'Media',
+            //   fieldName: 'Media',
+            // },
           ],
         },
       ],
