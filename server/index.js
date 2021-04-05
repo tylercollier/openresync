@@ -335,7 +335,7 @@ function getCronJobs(internalConfig) {
       if (purgeCronString) {
         const job = new CronJob(sourceConfig.cron.purge.cronString, doPurge)
         jobs.push(job)
-        const statsSync = statsPurgeLib(db)
+        const statsPurge = statsPurgeLib(db)
         statsPurge.listen(eventEmitter)
       }
 
