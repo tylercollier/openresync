@@ -1,27 +1,16 @@
 <template>
-  <div class="tw-flex tw-justify-between tw-items-end tw-py-2 tw-px-4 tw-bg-blue-100">
-    <h1 class="tw-text-4xl">Openresync</h1>
+  <div class="tw-flex tw-justify-between tw-items-center tw-py-2 tw-px-4 tw-bg-blue-100">
+    <h1>Openresync</h1>
     <div class="tw-flex">
       <div class="tw-mr-4">
-        <router-link class="tw-mr-2" to="/dashboard">Dashboard</router-link>
-        <router-link to="/cron">Cron</router-link>
+        <router-link class="tw-mr-4" to="/dashboard">Dashboard</router-link>
+        <router-link to="/cron">Cron Schedules</router-link>
       </div>
-      <VueSelect
-        style="width: 250px"
-        :options="sources"
-        label="name"
-        :value="selectedSource"
-        @input="goToSource"
-        :clearable="false"
-        placeholder="MLS Source"
-      />
     </div>
   </div>
 </template>
 
 <script>
-import VueSelect from 'vue-select'
-
 export default {
   props: {
     sources: Array,
@@ -36,9 +25,6 @@ export default {
     selectedSource() {
       return this.sources.find(x => x.name === this.sourceName)
     },
-  },
-  components: {
-    VueSelect,
   },
 }
 </script>

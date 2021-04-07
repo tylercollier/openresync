@@ -11,7 +11,6 @@ import { getMainDefinition } from 'apollo-utilities'
 import router from './routes'
 import './components/index'
 
-import 'vue-select/dist/vue-select.css'
 import './assets/tailwind.css'
 import '../lib/bootstrap/init'
 import './assets/index.scss'

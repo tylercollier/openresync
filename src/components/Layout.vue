@@ -1,19 +1,30 @@
 <template>
   <div>
-    <HeaderContainer :source-name="sourceName" />
-    <router-view></router-view>
+    <Header />
+    <div class="tw-flex">
+      <div class="tw-w-64">
+        <FetchSources v-slot="{ sources }">
+          <SourcesList :sources="sources" />
+        </FetchSources>
+      </div>
+      <router-view class="tw-flex-1"></router-view>
+    </div>
   </div>
 </template>
 
 <script>
-import HeaderContainer from './HeaderContainer'
+import FetchSources from './FetchSources'
+import Header from './Header'
+import SourcesList from './SourcesList'
 
 export default {
   props: {
     sourceName: String,
   },
   components: {
-    HeaderContainer,
+    FetchSources,
+    Header,
+    SourcesList,
   },
 }
 </script>

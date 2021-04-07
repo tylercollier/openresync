@@ -1,9 +1,12 @@
 <template>
   <div>
-    <h1 class="text-2xl">{{sourceName}}</h1>
+    <h1>{{sourceName}}</h1>
     <!-- Use :key here to force a re-render while we fetch more data -->
+    <h2>History</h2>
     <SyncStatsContainer :key="sourceName" :source-name="sourceName" v-slot="{ stats }">
+      <h3>Sync</h3>
       <SyncStats :stats="stats.sync"/>
+      <h3>Purge</h3>
       <PurgeStats :stats="stats.purge"/>
     </SyncStatsContainer>
     <StatsDetailsContainer :source-name="sourceName"/>

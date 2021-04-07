@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="!stats.length">No stats</div>
+    <div v-if="!stats || !stats.length">No stats</div>
     <div v-else>
       <div>
         <b-table-simple small striped hover>
