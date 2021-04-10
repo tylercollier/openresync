@@ -1,19 +1,31 @@
 <template>
-  <div>
-    <div v-for="(s, sourceName) in groupedStats" :key="sourceName">
-      <StatsHeader :source-name="sourceName" />
-      <h3>Sync</h3>
-      <SyncStats :stats="s.sync" />
-      <h3>Purge</h3>
-      <PurgeStats :stats="s.purge" />
-    </div>
+  <!-- The mr-4 here is to counter the margin-right: -15px on the b-card-group, which causes a horizontal scrollbar -->
+  <div class="tw-mr-4">
+    <b-card-group deck>
+      <b-card
+        v-for="(s, sourceName) in groupedStats"
+        :key="sourceName"
+        :title="sourceName"
+        style="flex: 0 1 20rem;"
+      >
+        <div v-if="s.sync.length">
+          <b-card-text>
+            <div>Last Batch: {{s.sync[0].batch_id}}</div>
+            <div>Status: <span
+              :class="{ 'text-success': s.sync[0].result === 'success', 'text-danger': s.sync[0].result === 'error' }">{{ s.sync[0].result }}</span>
+            </div>
+          </b-card-text>
+        </div>
+        <div v-else>
+          <em>Never run</em>
+        </div>
+        <b-button class="tw-mt-4" variant="primary" :to="`/sources/${sourceName}`">View details</b-button>
+      </b-card>
+    </b-card-group>
   </div>
 </template>
 
 <script>
-import SyncStats from './SyncStats'
-import PurgeStats from './PurgeStats'
-import StatsHeader from './StatsHeader'
 import groupBy from 'lodash/groupBy'
 import union from 'lodash/union'
 import keyBy from 'lodash/keyBy'
@@ -36,9 +48,6 @@ export default {
     },
   },
   components: {
-    SyncStats,
-    PurgeStats,
-    StatsHeader,
   },
 }
 </script>
