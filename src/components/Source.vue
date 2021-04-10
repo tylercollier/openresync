@@ -26,19 +26,19 @@
         </template>
       </QueryLoader>
     </div>
-    <!-- Use :key here to force a re-render while we fetch more data -->
     <div class="tw-mb-8">
+      <h2>Resources</h2>
+      <StatsDetailsContainer :source-name="sourceName"/>
+    </div>
+    <div>
       <h2>History</h2>
+      <!-- Use :key here to force a re-render while we fetch more data -->
       <SyncStatsContainer :key="sourceName" :source-name="sourceName" v-slot="{ stats }">
         <h3>Sync</h3>
         <SyncStats :stats="stats.sync"/>
         <h3>Purge</h3>
         <PurgeStats :stats="stats.purge"/>
       </SyncStatsContainer>
-    </div>
-    <div>
-      <h2>Resources</h2>
-      <StatsDetailsContainer :source-name="sourceName"/>
     </div>
   </div>
 </template>
