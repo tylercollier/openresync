@@ -2,7 +2,7 @@
   <div>
     <Header />
     <div class="tw-flex">
-      <div class="tw-w-64">
+      <div class="tw-w-64 p-2">
         <FetchSources v-slot="{ sources }">
           <SourcesList :sources="sources" />
         </FetchSources>

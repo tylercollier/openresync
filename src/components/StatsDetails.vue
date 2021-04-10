@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-for="resource of stats" :key="resource.name">
-      <h2>{{resource.name}}</h2>
+      <h3>{{resource.name}}</h3>
       <div>Records in resource in MLS: {{numRecordsInMls(resource.num_records_in_mls)}}</div>
       <div>Most recent record: <display-datetime :datetime="resource.most_recent_at" /></div>
       <div v-for="destination of resource.destinations" :key="destination.name" class="tw-ml-4">
