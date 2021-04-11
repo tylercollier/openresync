@@ -11,8 +11,9 @@
         <b-card-text>
           <div v-if="s.sync.length">
             <div>Last sync batch:<div class="tw-ml-4">{{ s.sync[0].batch_id }}</div></div>
-            <div>Status: <span
-              :class="{ 'text-success': s.sync[0].result === 'success', 'text-danger': s.sync[0].result === 'error' }">{{ s.sync[0].result }}</span>
+            <div>Status:
+              <b-icon v-if="s.sync[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully purged" />
+              <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully purged" />
             </div>
           </div>
           <div v-else>
@@ -20,8 +21,10 @@
           </div>
           <div v-if="s.purge.length && sourceName === 'aborTrestle'" class="tw-mt-2 tw-text-sm">
             <div>Last purge batch:<div class="tw-ml-4">{{ s.purge[0].batch_id }}</div></div>
-            <div>Status: <span
-              :class="{ 'text-success': s.purge[0].result === 'success', 'text-danger': s.purge[0].result === 'error' }">{{ s.purge[0].result }}</span>
+            <div>Status:
+              <b-icon v-if="s.purge[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully purged" />
+              <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully purged" />
+
             </div>
           </div>
           <!-- Here's a hack to add an equivalent amount of space if there is no purge data -->
