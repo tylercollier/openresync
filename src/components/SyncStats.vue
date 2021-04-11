@@ -18,11 +18,14 @@
           <template v-for="syncSource of stats">
             <tr :key="syncSource.id">
               <td>{{ getDisplayDatetime(convertBatchIdToTimestamp(syncSource.batch_id)) }}</td>
-              <td :class="{ 'text-success': syncSource.result === 'success', 'text-danger': syncSource.result === 'error' }">{{ syncSource.result }}</td>
+              <td>
+                <b-icon v-if="syncSource.result === 'success'" icon="check-circle" variant="success" title="All resources fully synced" />
+                <b-icon v-else icon="x-circle" variant="danger" title="Not all resources fully synced" />
+              </td>
               <td>{{ syncSource.error }}</td>
               <td>{{ getDisplayDatetime(syncSource.created_at) }}</td>
               <td>{{ getDisplayDatetime(syncSource.updated_at) }}</td>
-              <td><b-button @click="expand(syncSource.id)" variant="outline-secondary" size="sm">More</b-button></td>
+              <td><b-button @click="expand(syncSource.id)" variant="outline-secondary" size="sm">Detail</b-button></td>
             </tr>
             <template v-if="syncSource.id in expanded">
               <!-- We add an extra hidden row so the colors of our extra row below matches its "parent" in a striped table -->
@@ -30,13 +33,34 @@
               </tr>
               <tr :key="syncSource.id + 'b'">
                 <td colspan="6">
-                  <div v-for="resource of syncSource.resources" :key="resource.id" class="tw-ml-4">
-                    <h3>{{resource.name}}</h3>
-                    <div>Done: {{resource.is_done}}</div>
-                    <div v-for="destination of resource.destinations" :key="destination.id" class="tw-ml-4">
-                      <h4>{{destination.name}}</h4>
-                      <div>Records synced: {{destination.num_records_synced}}</div>
-                    </div>
+                  <div class="tw-px-20 tw-py-4">
+                    <b-table-simple large style="width: auto;">
+                      <thead>
+                      <tr>
+                        <th colspan="2"></th>
+                      <th :colspan="syncSource.resources[0].destinations" class="text-center">
+                        Num records synced to destination
+                      </th>
+                      </tr>
+                      <tr>
+                        <th>Resource</th>
+                        <th>Status</th>
+                        <th v-for="destination of syncSource.resources[0].destinations" :key="destination.name">{{destination.name}}</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr v-for="resource of syncSource.resources" :key="resource.name">
+                        <td>{{resource.name}}</td>
+                        <td>
+                          <b-icon v-if="resource.is_done" icon="check-circle" variant="success" title="All destinations fully synced"></b-icon>
+                          <b-icon v-else icon="x-circle" variant="danger" title="Not all destinations fully synced"></b-icon>
+                        </td>
+                        <td v-for="destination of resource.destinations" :key="destination.name">
+                          {{destination.num_records_synced}}
+												</td>
+											</tr>
+                      </tbody>
+                    </b-table-simple>
                   </div>
                 </td>
               </tr>
