@@ -24,6 +24,7 @@ This code is not being used in production by the author yet.
   * You are able to utilize `$select` and `$expand`
 * For each source, you can sync to one or more destinations
   * At this time, only MySQL is supported as a destination. (Multiple different MySQL destinations could be used.) However, adding a new destination shouldn't be difficult and more are planned.
+  * The destination schema is managed for you. For example, the tables and fields are created if they don't exist.
 * Logging is done in [ndjson](http://ndjson.org/) format, so that if you have to go digging through the logs, this is as easy as possible. Be sure to look into [pino-pretty](https://github.com/pinojs/pino-pretty), which is a dev dependency, so you can use it with e.g. `cat somelogfile | npx pino-pretty`.
 
 ### Screenshots
@@ -72,6 +73,8 @@ It's recommended to put secrets in a .env file. These will be read using the `do
 
 You should know these basics so you can debug problems.
 
+This level of detail is supplied because this is alpha software, and as such the likelyhood that you'll discover a bug is higher. Your feedback is appreciated.
+
 ### Server
 
 The server is responsible for hosting the cron jobs that do the sync work as well as providing an API for the website that shows the stats.
@@ -82,9 +85,30 @@ There is a initial sync and an ongoing sync. The initial sync could take hours d
 
 At a high level, first the data is downloaded from the MLS and put into files in a different directory for each resource. Once all are successfully downloaded, the sync process will go through all the files and sync the data to each destination. If there is an error, it will be logged, and retried on the next run.
 
+#### Download
 
+For each MLS source, and for each of its resources, we need to determine if this is the first sync, or if we have synced before and we should supply a `$filter=ModificationTimestamp gt X` query parameter. The former is just a special case of the latter and we use a timestamp of the Unix epoch. To get the timestamps, we first look if there are any previously downloaded files, and if so the latest file will be used. Otherwise, we look into the first destination specified (all destinations would be expected to report the same value though).
+
+Whenever you start a download, we create a batch ID, which is basically a timestamp, and if you resume, we find the oldest batch ID. The JSON files will be downloaded to the directory `config/sources/${sourceName}/downloadedData/${resourceName}`, where the file name is based on the batch ID as well as when that particular file finished downloading. There will be multiple files if there are more records to download than the MLS allows in a single page.
+
+Only after all resources are downloaded do we consider the download batch successful. Until it is, we use the internal config (described below) to track where we are in the process. When complete, we remove the download batch section in the internal config.
+
+#### The sync process (insert into destinations)
+
+When the actual sync process runs, as in the portion that takes the data from the downloaded JSON files and inserts (or updates) the data in the destinations, it will determine the oldest batch based on filenames in the downloaded data directories, and then process all the files with that batch ID, from oldest to newest. It will process the files one by one. It will insert into each destination, until that destination reports success, before moving on to the next file. This is so that each destination is as close to in sync as possible, as opposed to syncing all files for the batch to one destination, and then doing all files for the next destination, and so on. After the file has been used to insert data into each destination successfully, it is deleted.
+
+If an error occurs, this is recorded in the internal config, but the sync will be retried as part of the next cron job. However if 3 errors occur, no attempt to process will be made. You will need to examine the failure and resolve.
 
 ### Purge (aka reconciliation) process
+
+The purge process is similar to the sync process but differs in 2 important ways.
+
+1. There is no resuming the download process. It always downloads the entirety of the data. This is unfortunate and could be improved but is the simplest approach to handle Trestle and Bridge Interactive in the same way, which reduces code complexity.
+1. The downloaded files are not processed one by one, but instead must be loaded into memory all at once to compare to what's in the destinations. After the purge is complete, all downloaded files for the resource are deleted.
+
+### Stats
+
+As the program runs, it records certain statistics in the configured database, such as when a sync starts, finishes, whether it was successful, how many records were synced etc. It is these stats that are shown on the website. To see which tables are created, check `lib/stats/setUp.js`.
 
 ### Internal config
 
@@ -104,7 +128,7 @@ It is not recommended to change any code. Or if you do, do so in a new branch. O
 ## Q&A
 
 **Q:** Why would I use this tool and sync data locally, rather than querying the RESO Web API directly?  
-**A:** It's true that the RESO Web API is superior to RETS, and one reason is it allows you to efficiently query the API for specific results that could then e.g. be showed on a website. However, there are a number of use cases to sync the data locally.
+**A:** It's true that the RESO Web API is superior to RETS, and one reason is it allows you to efficiently query the API for specific results that could then e.g. be showed on a website. However, there are a number of use cases to sync the data locally. If you don't fit into any of the cases listed below, then you will be better off querying the MLS platform directly.
 
   In the following list, there are ideas that are beyond what this application does on its own. But you'd have the power to take things another step and accomplish things the RESO Web API can't.
 
@@ -124,7 +148,7 @@ It is not recommended to change any code. Or if you do, do so in a new branch. O
 **A:** Not sure. I haven't tried more than one. Because a lot of the work done can be offloaded from node (e.g. downloading files, writing JSON files to disk, sending data to MySQL, etc), it's likely a bunch. I would still recommend trying to offset the cron schedules from one another. Another factor is if you'll be writing to the same table or different ones. For example, if you're just doing Property records from different MLSs and write to a single Property table, you might get lock problems. But if you use different MySQL databases per source, or use the `makeTableName` concept to prefix your table names such that two sync processes aren't writing to the same table, MySQL will probably be able to handle it just fine.
 
 **Q:** Do I have to use the web server?  
-**A:** No, you could use the code in the `lib/sync` dir like a library and run the download, sync, and purge processes as you see fit. See `lib/go.js` as an example. I intend to turn the sync code into its own npm module.
+**A:** No. You could use the code in the `lib/sync` dir as a library and run the download, sync, and purge processes as you see fit. See `lib/go.js` as an example. I intend to turn the sync code into its own npm module.
 
 ## Known limitations
 

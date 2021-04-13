@@ -19,7 +19,7 @@ module.exports = () => ({
   // resources. For convenience, you could share more of their configuration.
   sources: [
     {
-      // The name should be thought of as an ID, meant for computers and URLs. So don't spaces, or other characters not
+      // The name should be thought of as an ID. It will be used for directories and URLs, so don't spaces, or other characters not
       // permitted in a URL. This name is arbitrary but must be unique among sources.
       name: 'aborBridgeInteractive',
 
@@ -89,8 +89,8 @@ module.exports = () => ({
           // The type of the destination, which is 'mysql' or 'devnull' (meant for debug purposes).
           type: 'mysql',
 
-          // This is the config block specifically meant for the destination. It would likely differ per destination,
-          // althoug it's moot now since only MySQL is supported.
+          // This is the config block specifically meant for the destination. It differs per destination,
+          // although it's moot now since only MySQL is supported.
           config: {
             // The username, password, host, port, database name all wrapped into one.
             connectionString: 'mysql://user1:password1@localhost:33033/mymls_bridge',
@@ -116,7 +116,7 @@ module.exports = () => ({
       // mlsResources is an array of objects. Each object represents a resource in the MLS, such as Property, Member,
       // etc. The name is the case sensitive name from the MLS.
       // Other optional fields are
-      //   * select: used for $select on the replication endpoint
+      //   * select: used for $select on the replication endpoint. An array of strings that are the field names.
       //   * expand: used for $expand. An array of objects, where each object is a subresource. Has these properties:
       //     * name: The TYPE of the subresource, for example Property might have an $expand of BuyerAgent. In this
       //             case, the TYPE of the subresource maps to Member, so set the name to Member.
