@@ -1,5 +1,6 @@
 <template>
   <div>
+    <h1 class="tw-font-bold tw-border-gray-700 tw-border-dotted tw-border-b-2 tw-mb-8">Cron Schedules</h1>
     <QueryLoader
       :query="gql => gql`
         query CronSchedules($sourceName: String) {

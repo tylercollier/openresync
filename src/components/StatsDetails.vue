@@ -13,9 +13,7 @@
         </thead>
         <tbody>
         <tr class="tw-italic">
-          <td>MLS
-            <b-badge v-b-tooltip.hover title="This is the source">?</b-badge>
-          </td>
+          <td>MLS</td>
           <td></td>
           <td>{{numRecordsInMls(resource.num_records_in_mls)}}</td>
           <td><display-datetime :datetime="resource.most_recent_at" /></td>

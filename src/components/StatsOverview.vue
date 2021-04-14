@@ -5,12 +5,12 @@
       <b-card
         v-for="(s, sourceName) in groupedStats"
         :key="sourceName"
-        :title="sourceName"
         style="flex: 0 1 20rem;"
       >
+        <b-card-title class="tw-font-bold">{{sourceName}}</b-card-title>
         <b-card-text>
           <div v-if="s.sync.length">
-            <div>Last sync batch:<div class="tw-ml-4">{{ s.sync[0].batch_id }}</div></div>
+            <div>Last sync batch:<div class="tw-ml-4" style="color: #388dc0;">{{ s.sync[0].batch_id }}</div></div>
             <div>Status:
               <b-icon v-if="s.sync[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully purged" />
               <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully purged" />
@@ -20,7 +20,7 @@
             <em>Never synced</em>
           </div>
           <div v-if="s.purge.length && sourceName === 'aborTrestle'" class="tw-mt-2 tw-text-sm">
-            <div>Last purge batch:<div class="tw-ml-4">{{ s.purge[0].batch_id }}</div></div>
+            <div>Last purge batch:<div class="tw-ml-4" style="color: #388dc0;">{{ s.purge[0].batch_id }}</div></div>
             <div>Status:
               <b-icon v-if="s.purge[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully purged" />
               <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully purged" />
@@ -34,7 +34,7 @@
             <div>-</div>
           </div>
         </b-card-text>
-        <b-button class="tw-mt-4" variant="primary" :to="`/sources/${sourceName}`">View details</b-button>
+        <b-button class="tw-mt-4" style="background: #d78326;" :to="`/sources/${sourceName}`">View details</b-button>
       </b-card>
     </b-card-group>
   </div>

@@ -2,12 +2,12 @@
   <div>
     <Header />
     <div class="tw-flex">
-      <div class="tw-w-64 p-2">
+      <div class="tw-w-64 tw-p-5" style="background: #c4ddec;">
         <FetchSources v-slot="{ sources }">
           <SourcesList :sources="sources" />
         </FetchSources>
       </div>
-      <router-view class="tw-flex-1"></router-view>
+      <router-view class="tw-flex-1 tw-px-12 tw-pt-4"></router-view>
     </div>
   </div>
 </template>

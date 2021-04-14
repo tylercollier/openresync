@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h1>Dashboard</h1>
     <SyncStatsContainer v-slot="{ stats }">
       <StatsOverview :stats="stats"/>
     </SyncStatsContainer>

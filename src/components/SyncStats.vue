@@ -11,7 +11,7 @@
             <th>Error</th>
             <th>Started</th>
             <th>Ended</th>
-            <th>Actions</th>
+            <th></th>
           </tr>
           </thead>
           <tbody>
@@ -42,7 +42,7 @@
                         Num records synced to destination
                       </th>
                       </tr>
-                      <tr>
+                      <tr class="text-center">
                         <th>Resource</th>
                         <th>Status</th>
                         <th v-for="destination of syncSource.resources[0].destinations" :key="destination.name">{{destination.name}}</th>
@@ -51,11 +51,11 @@
                       <tbody>
                       <tr v-for="resource of syncSource.resources" :key="resource.name">
                         <td>{{resource.name}}</td>
-                        <td>
+                        <td class="text-center">
                           <b-icon v-if="resource.is_done" icon="check-circle" variant="success" title="All destinations fully synced"></b-icon>
                           <b-icon v-else icon="x-circle" variant="danger" title="Not all destinations fully synced"></b-icon>
                         </td>
-                        <td v-for="destination of resource.destinations" :key="destination.name">
+                        <td class="text-right" v-for="destination of resource.destinations" :key="destination.name">
                           {{destination.num_records_synced}}
 												</td>
 											</tr>
