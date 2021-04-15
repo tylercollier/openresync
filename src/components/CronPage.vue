@@ -33,9 +33,21 @@
           <tbody>
           <tr v-for="cronSchedule of data.cronSchedules" :key="cronSchedule.sourceName">
             <td>{{cronSchedule.sourceName}}</td>
-            <td><template v-if="cronSchedule.sync">{{ cronSchedule.sync.cronString }}</template></td>
+            <td>
+              <template v-if="cronSchedule.sync">
+                <code class="tw-text-black">
+                  {{ cronSchedule.sync.cronString }}
+                </code>
+              </template>
+            </td>
             <td><template v-if="cronSchedule.sync"><DisplayDatetime :datetime="cronSchedule.sync.nextDate" /></template></td>
-            <td><template v-if="cronSchedule.purge">{{cronSchedule.purge.cronString}}</template></td>
+            <td>
+              <template v-if="cronSchedule.purge">
+                <code class="tw-text-black">
+                  {{ cronSchedule.purge.cronString }}
+                </code>
+              </template>
+            </td>
             <td><template v-if="cronSchedule.purge"><DisplayDatetime :datetime="cronSchedule.purge.nextDate" /></template></td>
           </tr>
           </tbody>
