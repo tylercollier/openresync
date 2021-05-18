@@ -35,13 +35,15 @@ module.exports = () => ({
       // this value in production.
       // metadataPath: pathLib.resolve(__dirname, 'sources/abor_bridge_interactive/actris_ref_metadata.xml'),
 
-      // getResourceEndpoint is used in non replication scenarios, such as to displaying stats on the website like how
-      // many records are in the source MLS system.
+      // getResourceEndpoint is used in non replication scenarios, such as to display stats on the website like how
+      // many records are in the source MLS system. You may include $filter values if desired, such as:
+      // $filter=PropertyType eq 'Residential'
+      // The function accepts an object, which is of type MlsResource, described in the 'mlsResources' item below.
       getResourceEndpoint: aborBridgeInteractive.getResourceEndpoint,
 
       // Get the replication endpoint for a given MLS Resource. This should be a function that returns a string.
       // The function accepts an object, which is of type MlsResource, described in the 'mlsResources' item below.
-      // It made include a $filter query parameter, but that $filter query parameter will be appended to (with an AND
+      // You may include a $filter query parameter, but that $filter query parameter will be appended (using an AND
       // condition) with timestamps by the openresync application.
       getReplicationEndpoint: mlsResourceObj => {
         const resourceEndpoint = aborBridgeInteractive.getResourceEndpoint(mlsResourceObj)
@@ -54,7 +56,7 @@ module.exports = () => ({
       // returns a string.
       // The function accepts two parameters: 1) MlsResource object, as described in the 'mlsResources' item below.
       // 2) isExpandedMlsResource, a boolean which indicates if the resource is a root or was used as an $expand'd
-      // resource. In the latter case, you might perhaps want to use any $filter condition.
+      // resource. In the latter case, you might perhaps not want to use any $filter condition.
       // Do not include a $select query string parameter; it will be overwritten with the primary key(s) of the
       // resource.
 
