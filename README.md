@@ -142,7 +142,7 @@ It is not recommended to change any code. Or if you do, do so in a new branch. O
 ## Q&A
 
 **Q:** Why would I use this tool and sync data locally, rather than querying the RESO Web API directly?  
-**A:** It's true that the RESO Web API is generally superior to RETS, and one reason is it allows you to efficiently query the API for specific results that could then e.g. be shown on a website. However, there are a number of use cases to sync the data locally. If you don't fit into any of the cases listed below, then you will probably be better off querying the MLS platform directly.
+**A:** It's true that the RESO Web API is generally superior to the older RETS standard, and one reason is it allows you to efficiently query the API for specific results that could then e.g. be shown on a website. However, here are a number of use cases to sync the data locally. (If you don't fit into any of the cases listed below, then you will probably be better off querying the MLS platform directly.)
 
   In the following list, there are ideas that are beyond what this application does on its own. But you'd have the power to take things another step and accomplish things the RESO Web API can't.
 
@@ -154,6 +154,8 @@ It is not recommended to change any code. Or if you do, do so in a new branch. O
   * Reference other fields 
     * E.g. say I want to do a query to see where ModificationTimestamp != MediaModificationTimestamp on the Media resource. But you can't do such a complex query in RESO Web API.
   * Basically anything the RESO Web API doesn't offer. For example, some platforms offer polygon searches. But you can't e.g. search with a simple centroid and radius. If you build your own API using the data synced by this tool, you could do such a thing.
+
+Another advantage of syncing the data and creating your own API is you basically avoid quota limits.
 
 **Q:** So it just syncs the data? Is that useful? Can I e.g. show the data on a website?  
 **A:** Yes, it just syncs the data. But this is the mission of this project and should be a large chunk of any work needed to produce a project that uses the data. You'll still have work left to do such as field mapping (especially if you use multiple MLS sources and intend to harmonize their data and show it in one place consistently). Of course whether you're allowed to show the data publicly is a legal concern you'll need to talk with each MLS about.
