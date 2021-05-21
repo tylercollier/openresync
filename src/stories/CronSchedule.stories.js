@@ -1,4 +1,4 @@
-import CronSchedule from '../components/CronSchedule'
+import CronSchedule from '../components/CronSchedules'
 import { makeStory } from './lib/utils'
 import { CronJob } from 'cron'
 import moment from 'moment'
