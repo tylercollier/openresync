@@ -116,7 +116,7 @@ describe('stats/sync', () => {
         eventEmitter.on('ors:sync.done', () => setTimeout(resolve, 100))
       })
 
-      await destinationManager.resumeSync()
+      await destinationManager.resumeSync('sync')
 
       await p
 
@@ -182,7 +182,7 @@ describe('stats/sync', () => {
       })
 
       try {
-        await destinationManager.resumeSync()
+        await destinationManager.resumeSync('sync')
       } catch (error) {}
 
       await p

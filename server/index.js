@@ -314,7 +314,7 @@ function getCronJobs(internalConfig) {
         await destinationManager.syncMetadata(metadataString)
 
         await downloader.downloadMlsResources()
-        await destinationManager.resumeSync()
+        await destinationManager.resumeSync('sync')
       }
 
       async function doPurge() {
