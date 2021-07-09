@@ -44,6 +44,7 @@
     "pino": "^6.11.0",
     "postcss": "^7.0.35",
     "progress": "^2.0.3",
+    "solr-client": "^0.9.0",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.4",
     "text-ellipsis": "^1.0.3",
     "vue": "^2.6.11",

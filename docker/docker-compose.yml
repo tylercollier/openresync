@@ -22,3 +22,13 @@ services:
       - ./volumes/mariadb:/var/lib/mysql
     ports:
       - 33034:3306
+  solr5:
+    build: ./solr-5/
+    volumes:
+      - ./solr-5/configs:/var/lib/solr/configs
+      - ./solr-5/templates:/var/lib/solr/templates
+      - ./volumes/solr5:/var/lib/solr/dist/server/solr
+      - ./solr-5/configs/solr.xml:/var/lib/solr/dist/server/solr/solr.xml
+    ports:
+      - 58983:8983
+    command: "/var/lib/solr/dist/bin/solr start -f -a -Xmx1024m"
