@@ -38,7 +38,7 @@
                       <thead>
                       <tr>
                         <th colspan="2"></th>
-                      <th :colspan="syncSource.resources[0].destinations" class="text-center">
+                      <th :colspan="syncSource.resources[0].destinations.length" class="text-center">
                         Num records synced to destination
                       </th>
                       </tr>

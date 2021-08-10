@@ -151,7 +151,7 @@ const resolvers = {
       return userConfig
     },
     syncStats: async (parent, args) => {
-      function getStatsForSource(sourceName, type) {
+      async function getStatsForSource(sourceName, type) {
         let dbType
         if (type === 'sync') {
           dbType = SyncSource
@@ -162,7 +162,7 @@ const resolvers = {
         }
         return dbType.query()
           .where({ name: sourceName })
-          .orderBy(['created_at'], 'desc')
+          .orderBy('created_at', 'desc')
           .limit(3)
           .withGraphFetched({
             resources: {

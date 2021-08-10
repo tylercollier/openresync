@@ -23,7 +23,11 @@
           <td>{{destination.name}}</td>
           <td>
             {{destination.num_records}}
-            <b-icon v-if="destination.num_records !== resource.num_records_in_mls" class="tw-ml-2" icon="x-circle" variant="danger" title="Does not match the number of records in the MLS"></b-icon>
+            <span v-if="destination.num_records !== resource.num_records_in_mls">
+              <b-icon class="tw-mx-2" icon="x-circle"
+                      variant="danger" title="Does not match the number of records in the MLS"></b-icon>
+              {{differenceString(destination.num_records, resource.num_records_in_mls)}}
+            </span>
           </td>
           <td>
             <display-datetime :datetime="destination.most_recent_at" />
@@ -44,6 +48,15 @@ export default {
   methods: {
     numRecordsInMls(num) {
       return num || '?'
+    },
+    differenceString(destinationNumRecords, numRecordsInMls) {
+      if (!numRecordsInMls) {
+        return ''
+      }
+      if (destinationNumRecords < numRecordsInMls) {
+        return `Missing ${numRecordsInMls - destinationNumRecords}`
+      }
+      return `Too many by ${destinationNumRecords - numRecordsInMls}`
     },
   }
 }
