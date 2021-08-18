@@ -1,4 +1,4 @@
-const { ApolloServer, gql, PubSub } = require('apollo-server')
+const { ApolloServer, gql, PubSub } = require('apollo-server-express')
 const { buildUserConfig, getInternalConfig, flushInternalConfig, getMlsSourceUserConfig } = require('../lib/config')
 const { SyncSource, PurgeSource } = require('../lib/models/index')
 const { Model } = require('objection')
@@ -19,6 +19,7 @@ const pathLib = require('path')
 const moment = require('moment')
 const statsSyncLib = require('../lib/stats/sync')
 const statsPurgeLib = require('../lib/stats/purge')
+const express = require('express')
 
 const dotenv = require('dotenv')
 dotenv.config()
@@ -278,8 +279,16 @@ async function setUpQaScenario() {
 async function startServer() {
   // await setUpQaScenario()
 
-  server.listen(userConfig.server.port).then(({url}) => {
-    console.log(`🚀 Server ready at ${url}`);
+  // Start Apollo server
+  await server.start()
+
+  const app = express()
+  // In a high volume production environment, you'd use e.g. nginx as a reverse proxy to serve static assets.
+  // But if those requests get here, this will handle them. Works great for getting it set up, or for low volume.
+  app.use(express.static(pathLib.resolve(__dirname, '../dist')))
+  server.applyMiddleware({ app })
+  app.listen(userConfig.server.port, () => {
+    console.log(`🚀 Server listening on port ${userConfig.server.port}`);
   })
 }
 
