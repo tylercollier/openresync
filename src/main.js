@@ -16,8 +16,9 @@ import '../lib/bootstrap/init'
 import './assets/index.scss'
 
 const httpLink = createHttpLink()
+const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
 const wsLink = new WebSocketLink({
-  uri: `ws://${location.host}/subscriptions`,
+  uri: `${protocol}://${location.host}/subscriptions`,
   options: {
     reconnect: true,
   },
