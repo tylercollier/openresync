@@ -19,6 +19,7 @@ const pathLib = require('path')
 const moment = require('moment')
 const statsSyncLib = require('../lib/stats/sync')
 const statsPurgeLib = require('../lib/stats/purge')
+const utils = require('../lib/sync/utils')
 const express = require('express')
 
 const dotenv = require('dotenv')
@@ -320,7 +321,8 @@ function getCronJobs(internalConfig) {
 
       async function doSync() {
         const metadataString = await downloader.downloadMlsMetadata()
-        await destinationManager.syncMetadata(metadataString)
+        const metadata = await utils.parseMetadataString(metadataString)
+        await destinationManager.syncMetadata(metadata)
 
         await downloader.downloadMlsResources()
         await destinationManager.resumeSync('sync')
