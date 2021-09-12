@@ -23,6 +23,8 @@
           <td>{{destination.name}}</td>
           <td>
             {{destination.num_records}}
+            <b-icon v-if="destination.num_records === resource.num_records_in_mls" class="tw-mx-2" icon="check-circle"
+                    variant="success" title="Matches the number of records in the MLS"></b-icon>
             <span v-if="destination.num_records !== resource.num_records_in_mls">
               <b-icon class="tw-mx-2" icon="x-circle"
                       variant="danger" title="Does not match the number of records in the MLS"></b-icon>
@@ -31,7 +33,8 @@
           </td>
           <td>
             <display-datetime :datetime="destination.most_recent_at" />
-            <b-icon v-if="destination.most_recent_at && destination.most_recent_at != resource.most_recent_at" class="tw-ml-2" icon="x-circle" variant="danger" title="Does not match the most recent record in the MLS"></b-icon>
+            <b-icon v-if="destination.most_recent_at && destination.most_recent_at === resource.most_recent_at" class="tw-ml-2" icon="check-circle" variant="success" title="Matches the most recent record in the MLS"></b-icon>
+            <b-icon v-if="destination.most_recent_at && destination.most_recent_at !== resource.most_recent_at" class="tw-ml-2" icon="x-circle" variant="danger" title="Does not match the most recent record in the MLS"></b-icon>
           </td>
         </tr>
         </tbody>
