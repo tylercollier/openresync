@@ -7,11 +7,15 @@
           cronSchedules(sourceName: $sourceName) {
             sourceName
             sync {
-              cronString
+              cronStrings
               nextDate
             }
             purge {
-              cronString
+              cronStrings
+              nextDate
+            }
+            reconcile {
+              cronStrings
               nextDate
             }
           }
@@ -28,6 +32,8 @@
             <th>Sync next run</th>
             <th>Purge cron schedule</th>
             <th>Purge next run</th>
+            <th>Reconcile cron schedule</th>
+            <th>Reconcile next run</th>
           </tr>
           </thead>
           <tbody>
@@ -36,7 +42,7 @@
             <td>
               <template v-if="cronSchedule.sync">
                 <code class="tw-text-black">
-                  {{ cronSchedule.sync.cronString }}
+                  <CronStrings :cron-strings="cronSchedule.sync.cronStrings" />
                 </code>
               </template>
             </td>
@@ -44,11 +50,19 @@
             <td>
               <template v-if="cronSchedule.purge">
                 <code class="tw-text-black">
-                  {{ cronSchedule.purge.cronString }}
+                  <CronStrings :cron-strings="cronSchedule.purge.cronStrings" />
                 </code>
               </template>
             </td>
             <td><template v-if="cronSchedule.purge"><DisplayDatetime :datetime="cronSchedule.purge.nextDate" /></template></td>
+            <td>
+              <template v-if="cronSchedule.reconcile">
+                <code class="tw-text-black">
+                  <CronStrings :cron-strings="cronSchedule.reconcile.cronStrings" />
+                </code>
+              </template>
+            </td>
+            <td><template v-if="cronSchedule.reconcile"><DisplayDatetime :datetime="cronSchedule.reconcile.nextDate" /></template></td>
           </tr>
           </tbody>
         </b-table-simple>
@@ -60,6 +74,7 @@
 <script>
 import QueryLoader from './QueryLoader'
 import DisplayDatetime from './DisplayDatetime'
+import CronStrings from './CronStrings'
 
 export default {
   props: {
@@ -71,6 +86,7 @@ export default {
   components: {
     QueryLoader,
     DisplayDatetime,
+    CronStrings,
   },
 }
 </script>

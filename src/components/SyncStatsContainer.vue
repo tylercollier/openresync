@@ -50,6 +50,26 @@
                 }
               }
             }
+            reconcile {
+              id
+              name
+              batch_id
+              result
+              error
+              ...databaseRecordFields
+              resources {
+                id
+                name
+                is_done
+                ...databaseRecordFields
+                destinations {
+                  id
+                  name
+                  num_records_reconciled
+                  ...databaseRecordFields
+                }
+              }
+            }
           }
         }
       `"

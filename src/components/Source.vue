@@ -8,11 +8,15 @@
           cronSchedules(sourceName: $sourceName) {
             sourceName
             sync {
-              cronString
+              cronStrings
               nextDate
             }
             purge {
-              cronString
+              cronStrings
+              nextDate
+            }
+            reconcile {
+              cronStrings
               nextDate
             }
           }
@@ -38,6 +42,8 @@
         <SyncStats :stats="stats.sync"/>
         <h3>Purge</h3>
         <PurgeStats :stats="stats.purge"/>
+        <h3>Reconcile</h3>
+        <ReconcileStats :stats="stats.reconcile"/>
       </SyncStatsContainer>
     </div>
   </div>
@@ -47,6 +53,7 @@
 import SyncStatsContainer from './SyncStatsContainer'
 import SyncStats from './SyncStats'
 import PurgeStats from './PurgeStats'
+import ReconcileStats from './ReconcileStats'
 import StatsDetailsContainer from './StatsDetailsContainer'
 import QueryLoader from './QueryLoader'
 import CronSchedules from "@/components/CronSchedules";
@@ -60,6 +67,7 @@ export default {
     SyncStatsContainer,
     SyncStats,
     PurgeStats,
+    ReconcileStats,
     StatsDetailsContainer,
     QueryLoader,
   },

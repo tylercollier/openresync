@@ -12,24 +12,36 @@
           <div v-if="s.sync.length">
             <div>Last sync batch:<div class="tw-ml-4" style="color: #388dc0;">{{ s.sync[0].batch_id }}</div></div>
             <div>Status:
-              <b-icon v-if="s.sync[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully purged" />
-              <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully purged" />
+              <b-icon v-if="s.sync[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully synced" />
+              <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully synced" />
             </div>
           </div>
           <div v-else>
             <em>Never synced</em>
           </div>
-          <div v-if="s.purge.length && sourceName === 'aborTrestle'" class="tw-mt-2 tw-text-sm">
+          <div v-if="s.purge.length" class="tw-mt-2">
             <div>Last purge batch:<div class="tw-ml-4" style="color: #388dc0;">{{ s.purge[0].batch_id }}</div></div>
             <div>Status:
               <b-icon v-if="s.purge[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully purged" />
               <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully purged" />
-
             </div>
           </div>
           <!-- Here's a hack to add an equivalent amount of space if there is no purge data -->
-          <div v-else class="tw-invisible tw-mt-2 tw-text-sm">
+          <div v-else class="tw-invisible tw-mt-2">
             <div>Last purge batch</div>
+            <div>Status:</div>
+            <div>-</div>
+          </div>
+          <div v-if="s.reconcile.length" class="tw-mt-2">
+            <div>Last reconcile batch:<div class="tw-ml-4" style="color: #388dc0;">{{ s.reconcile[0].batch_id }}</div></div>
+            <div>Status:
+              <b-icon v-if="s.reconcile[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully reconciled" />
+              <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully reconciled" />
+            </div>
+          </div>
+          <!-- Here's a hack to add an equivalent amount of space if there is no reconcile data -->
+          <div v-else class="tw-invisible tw-mt-2">
+            <div>Last reconcile batch</div>
             <div>Status:</div>
             <div>-</div>
           </div>
@@ -54,10 +66,12 @@ export default {
     groupedStats() {
       const groupedSyncStats = groupBy(this.stats.sync, x => x.name)
       const groupedPurgeStats = groupBy(this.stats.purge, x => x.name)
-      const sources = union(Object.keys(groupedSyncStats), Object.keys(groupedPurgeStats))
+      const groupedReconcileStats = groupBy(this.stats.reconcile, x => x.name)
+      const sources = union(Object.keys(groupedSyncStats), Object.keys(groupedPurgeStats), Object.keys(groupedReconcileStats))
       const x = mapValues(keyBy(sources, x => x), x => ({
         sync: groupedSyncStats[x],
         purge: groupedPurgeStats[x],
+        reconcile: groupedReconcileStats[x],
       }))
       return x
     },

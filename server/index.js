@@ -1,6 +1,6 @@
 const { ApolloServer, gql, PubSub } = require('apollo-server-express')
 const { buildUserConfig, getInternalConfig, flushInternalConfig, getMlsSourceUserConfig } = require('../lib/config')
-const { SyncSource, PurgeSource } = require('../lib/models/index')
+const { SyncSource, PurgeSource, ReconcileSource } = require('../lib/models/index')
 const { Model } = require('objection')
 const knex = require('knex')
 const { setUp } = require('../lib/stats/setUp')
@@ -19,6 +19,7 @@ const pathLib = require('path')
 const moment = require('moment')
 const statsSyncLib = require('../lib/stats/sync')
 const statsPurgeLib = require('../lib/stats/purge')
+const statsReconcileLib = require('../lib/stats/reconcile')
 const utils = require('../lib/sync/utils')
 const express = require('express')
 
@@ -109,6 +110,36 @@ const typeDefs = gql`
     resources: [PurgeResource!]!
   }
 
+  type ReconcileDestination implements DatabaseRecord{
+    id: Int!
+    reconcile_resources_id: Int!
+    name: String!
+    num_records_reconciled: Int!
+    created_at: DateTime!
+    updated_at: DateTime
+  }
+
+  type ReconcileResource implements DatabaseRecord {
+    id: Int!
+    reconcile_sources_id: Int!
+    name: String!
+    is_done: Boolean!
+    created_at: DateTime!
+    updated_at: DateTime
+    destinations: [ReconcileDestination!]!
+  }
+
+  type ReconcileSource implements DatabaseRecord {
+    id: Int!
+    name: String!
+    batch_id: String!
+    result: String
+    error: String
+    created_at: DateTime!
+    updated_at: DateTime
+    resources: [ReconcileResource!]!
+  }
+
   type StatsDetailsDestination {
     name: String!
     num_records: Int!
@@ -125,10 +156,11 @@ const typeDefs = gql`
   type SyncStats {
     sync: [SyncSource!]!
     purge: [PurgeSource!]!
+    reconcile: [ReconcileSource!]!
   }
   
   type CronSkedj {
-    cronString: String
+    cronStrings: [String]
     nextDate: DateTime
   }
 
@@ -136,6 +168,7 @@ const typeDefs = gql`
     sourceName: String!
     sync: CronSkedj
     purge: CronSkedj
+    reconcile: CronSkedj
   }
 
   type Query {
@@ -159,6 +192,8 @@ const resolvers = {
           dbType = SyncSource
         } else if (type === 'purge') {
           dbType = PurgeSource
+        } else if (type === 'reconcile') {
+          dbType = ReconcileSource
         } else {
           throw new Error(`875864567 - invalid type ${type}`)
         }
@@ -174,25 +209,30 @@ const resolvers = {
       }
 
       if (args.sourceName) {
-        const [s, p] = await Promise.all([
+        const [s, p, r] = await Promise.all([
           getStatsForSource(args.sourceName, 'sync'),
           getStatsForSource(args.sourceName, 'purge'),
+          getStatsForSource(args.sourceName, 'reconcile'),
         ])
         return {
           sync: s,
           purge: p,
+          reconcile: r,
         }
       }
 
-      const [s, p] = await Promise.all([
+      const [s, p, r] = await Promise.all([
         Promise.all(userConfig.sources.map(x => getStatsForSource(x.name, 'sync'))),
         Promise.all(userConfig.sources.map(x => getStatsForSource(x.name, 'purge'))),
+        Promise.all(userConfig.sources.map(x => getStatsForSource(x.name, 'reconcile'))),
       ])
       const syncStats = _.flatMap(s)
       const purgeStats = _.flatMap(p)
+      const reconcileStats = _.flatMap(r)
       return {
         sync: syncStats,
         purge: purgeStats,
+        reconcile: reconcileStats,
       }
     },
     syncStatsDetails: async (parent, args) => {
@@ -216,28 +256,42 @@ const resolvers = {
       return data
     },
     cronSchedules: async (parent, args) => {
+      function getNextDate(cronStrings) {
+        const cronJobs = cronStrings.map(x => new CronJob(x, () => {}))
+        const orderedJobs = _.orderBy(cronJobs, x => x.nextDate())
+        return orderedJobs[0].nextDate().toISOString()
+      }
       function getCronSchedule(sourceName) {
         const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
         let syncStuff = null
-        if (_.get(sourceConfig, 'cron.sync')) {
-          const job = new CronJob(sourceConfig.cron.sync.cronString, () => {})
+        const syncCronStrings = _.get(sourceConfig, 'cron.sync.cronStrings')
+        if (syncCronStrings && syncCronStrings.length) {
           syncStuff = {
-            cronString: sourceConfig.cron.sync.cronString,
-            nextDate: job.nextDate().toISOString(),
+            cronStrings: sourceConfig.cron.sync.cronStrings,
+            nextDate: getNextDate(syncCronStrings),
           }
         }
         let purgeStuff = null
-        if (_.get(sourceConfig, 'cron.purge')) {
-          const job = new CronJob(sourceConfig.cron.purge.cronString, () => {})
+        const purgeCronStrings = _.get(sourceConfig, 'cron.purge.cronStrings')
+        if (purgeCronStrings && purgeCronStrings.length) {
           purgeStuff = {
-            cronString: sourceConfig.cron.purge.cronString,
-            nextDate: job.nextDate().toISOString(),
+            cronStrings: sourceConfig.cron.purge.cronStrings,
+            nextDate: getNextDate(purgeCronStrings),
+          }
+        }
+        let reconcileStuff = null
+        const reconcileCronStrings = _.get(sourceConfig, 'cron.reconcile.cronStrings')
+        if (reconcileCronStrings && reconcileCronStrings.length) {
+          reconcileStuff = {
+            cronStrings: sourceConfig.cron.reconcile.cronStrings,
+            nextDate: getNextDate(reconcileCronStrings),
           }
         }
         return {
           sourceName,
           sync: syncStuff,
           purge: purgeStuff,
+          reconcile: reconcileStuff,
         }
       }
 
@@ -299,10 +353,11 @@ function getCronJobs(internalConfig) {
   userConfig.sources.forEach(source => {
     const sourceName = source.name
     const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
-    const syncCronString = _.get(sourceConfig, 'cron.sync')
-    const purgeCronString = _.get(sourceConfig, 'cron.purge')
+    const syncCronStrings = _.get(sourceConfig, 'cron.sync.cronStrings', [])
+    const purgeCronStrings = _.get(sourceConfig, 'cron.purge.cronStrings', [])
+    const reconcileCronStrings = _.get(sourceConfig, 'cron.reconcile.cronStrings', [])
 
-    if (syncCronString || purgeCronString) {
+    if (syncCronStrings.length || purgeCronStrings.length || reconcileCronStrings.length) {
       const eventEmitter = new EventEmitter()
       const logger = pino({
         level: 'debug',
@@ -333,21 +388,49 @@ function getCronJobs(internalConfig) {
         await destinationManager.resumePurge()
       }
 
-      if (syncCronString) {
-        const cronTime = sourceConfig.cron.sync.cronString
-        // For debugging, start in a few seconds, rather than read the config
-        // const m = moment().add(2, 'seconds')
-        // const cronTime = m.toDate()
-        const job = new CronJob(cronTime, doSync)
-        jobs.push(job)
-        const statsSync = statsSyncLib(db)
-        statsSync.listen(eventEmitter)
+      async function doReconcile() {
+        const metadataString = await downloader.downloadMlsMetadata()
+        const metadata = await utils.parseMetadataString(metadataString)
+        await downloader.downloadReconcileData()
+        await downloader.downloadMissingData()
+        await destinationManager.resumeSync('missing', metadata)
       }
-      if (purgeCronString) {
-        const job = new CronJob(sourceConfig.cron.purge.cronString, doPurge)
-        jobs.push(job)
-        const statsPurge = statsPurgeLib(db)
-        statsPurge.listen(eventEmitter)
+
+      if (syncCronStrings.length) {
+        for (const cronString of syncCronStrings) {
+          const cronTime = cronString
+          // For debugging, start in a few seconds, rather than read the config
+          // const m = moment().add(2, 'seconds')
+          // const cronTime = m.toDate()
+          const job = new CronJob(cronTime, doSync)
+          jobs.push(job)
+          const statsSync = statsSyncLib(db)
+          statsSync.listen(eventEmitter)
+        }
+      }
+      if (purgeCronStrings.length) {
+        for (const cronString of purgeCronStrings) {
+          const cronTime = cronString
+          // For debugging, start in a few seconds, rather than read the config
+          // const m = moment().add(2, 'seconds')
+          // const cronTime = m.toDate()
+          const job = new CronJob(cronString, doPurge)
+          jobs.push(job)
+          const statsPurge = statsPurgeLib(db)
+          statsPurge.listen(eventEmitter)
+        }
+      }
+      if (reconcileCronStrings.length) {
+        for (const cronString of reconcileCronStrings) {
+          const cronTime = cronString
+          // For debugging, start in a few seconds, rather than read the config
+          // const m = moment().add(2, 'seconds')
+          // const cronTime = m.toDate()
+          const job = new CronJob(cronString, doReconcile)
+          jobs.push(job)
+          const statsReconcile = statsReconcileLib(db)
+          statsReconcile.listen(eventEmitter)
+        }
       }
 
       // For debug, to force continuous. Use instead of cron.
