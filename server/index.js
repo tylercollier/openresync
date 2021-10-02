@@ -396,7 +396,8 @@ function getCronJobs(internalConfig) {
         await destinationManager.resumeSync('missing', metadata)
       }
 
-      if (syncCronStrings.length) {
+      const syncCronEnabled = _.get(sourceConfig, 'cron.sync.enabled', true)
+      if (syncCronEnabled && syncCronStrings.length) {
         for (const cronString of syncCronStrings) {
           const cronTime = cronString
           // For debugging, start in a few seconds, rather than read the config
@@ -408,7 +409,8 @@ function getCronJobs(internalConfig) {
           statsSync.listen(eventEmitter)
         }
       }
-      if (purgeCronStrings.length) {
+      const purgeCronEnabled = _.get(sourceConfig, 'cron.purge.enabled', true)
+      if (purgeCronEnabled && purgeCronStrings.length) {
         for (const cronString of purgeCronStrings) {
           const cronTime = cronString
           // For debugging, start in a few seconds, rather than read the config
@@ -420,7 +422,8 @@ function getCronJobs(internalConfig) {
           statsPurge.listen(eventEmitter)
         }
       }
-      if (reconcileCronStrings.length) {
+      const reconcileCronEnabled = _.get(sourceConfig, 'cron.reconcile.enabled', true)
+      if (reconcileCronEnabled && reconcileCronStrings.length) {
         for (const cronString of reconcileCronStrings) {
           const cronTime = cronString
           // For debugging, start in a few seconds, rather than read the config
