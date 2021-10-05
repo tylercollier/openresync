@@ -22,6 +22,7 @@ const statsPurgeLib = require('../lib/stats/purge')
 const statsReconcileLib = require('../lib/stats/reconcile')
 const utils = require('../lib/sync/utils')
 const express = require('express')
+const { createServer } = require('http')
 
 const dotenv = require('dotenv')
 dotenv.config()
@@ -177,6 +178,10 @@ const typeDefs = gql`
     syncStatsDetails(sourceName: String): [StatsDetailsResource!]!
     cronSchedules(sourceName: String): [CronSchedule!]!
   }
+
+  type Subscription {
+    numRunningJobs: Int!
+  }
 `
 
 const resolvers = {
@@ -299,7 +304,23 @@ const resolvers = {
       return sourceNames.map(getCronSchedule)
     },
   },
+  Subscription: {
+    numRunningJobs: {
+      subscribe() {
+        console.log('subscription thing is happening for numRunningJobs')
+        return pubsub.asyncIterator(['numRunningJobs'])
+      },
+    },
+  },
 }
+
+let count = 0
+setInterval(() => {
+  count++
+  pubsub.publish('numRunningJobs', {
+    numRunningJobs: count,
+  })
+}, 3000)
 
 const server = new ApolloServer({
   schema: makeExecutableSchema({
@@ -342,7 +363,10 @@ async function startServer() {
   // But if those requests get here, this will handle them. Works great for getting it set up, or for low volume.
   app.use(express.static(pathLib.resolve(__dirname, '../dist')))
   server.applyMiddleware({ app })
-  app.listen(userConfig.server.port, () => {
+  // I got these lines from https://stackoverflow.com/a/67926714/135101
+  const httpServer = createServer(app)
+  server.installSubscriptionHandlers(httpServer)
+  httpServer.listen(userConfig.server.port, () => {
     console.log(`🚀 Server listening on port ${userConfig.server.port}`);
   })
 }

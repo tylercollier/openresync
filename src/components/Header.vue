@@ -2,6 +2,9 @@
   <div class="tw-flex tw-justify-between tw-items-center tw-py-2 tw-px-4 tw-text-white" style="background: #0a3d5b;">
     <h1 class="tw-font-bold tw-py-2">Openresync</h1>
     <div class="tw-flex">
+      <div class="tw-mr-4">
+        Number of jobs running: {{countOfRunningJobs}}
+      </div>
       <div class="tw-mr-4 tw-font-bold">
         <router-link class="tw-mr-4 tw-text-white" :style="styles('/dashboard')" to="/dashboard">Dashboard</router-link>
         <router-link to="/cron" class="tw-text-white" :style="styles('/cron')">Cron Schedules</router-link>
@@ -11,10 +14,29 @@
 </template>
 
 <script>
+import gql from 'graphql-tag'
+
 export default {
   props: {
     sources: Array,
     sourceName: String,
+  },
+  data() {
+    return {
+      countOfRunningJobs: 0,
+    }
+  },
+  apollo: {
+    $subscribe: {
+      numRunningJobs: {
+        query: gql`subscription {
+          numRunningJobs
+        }`,
+        result({ data }) {
+          this.countOfRunningJobs = data.numRunningJobs
+        },
+      },
+    },
   },
   methods: {
     goToSource(value) {
