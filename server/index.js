@@ -23,6 +23,7 @@ const statsReconcileLib = require('../lib/stats/reconcile')
 const utils = require('../lib/sync/utils')
 const express = require('express')
 const { createServer } = require('http')
+const { displayStringFormat } = require('../lib/sync/utils/datetime')
 
 const dotenv = require('dotenv')
 dotenv.config()
@@ -314,14 +315,6 @@ const resolvers = {
   },
 }
 
-let count = 0
-setInterval(() => {
-  count++
-  pubsub.publish('numRunningJobs', {
-    numRunningJobs: count,
-  })
-}, 3000)
-
 const server = new ApolloServer({
   schema: makeExecutableSchema({
     typeDefs: [
@@ -374,6 +367,7 @@ async function startServer() {
 
 function getCronJobs(internalConfig) {
   const jobs = []
+  let runningJobsCount = 0
   userConfig.sources.forEach(source => {
     const sourceName = source.name
     const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
@@ -384,7 +378,7 @@ function getCronJobs(internalConfig) {
     if (syncCronStrings.length || purgeCronStrings.length || reconcileCronStrings.length) {
       const eventEmitter = new EventEmitter()
       const logger = pino({
-        level: 'debug',
+        level: 'trace',
         // I don't care about the hostname, pid
         base: null,
         timestamp: pino.stdTimeFunctions.isoTime,
@@ -397,6 +391,27 @@ function getCronJobs(internalConfig) {
       const downloader = downloaderLib(sourceName, configBundle, eventEmitter, logger)
       const destinationManager = destinationManagerLib(sourceName, configBundle, eventEmitter, logger)
       downloader.setDestinationManager(destinationManager)
+
+      const jobCountWrapper = (name, fn) => {
+        return async () => {
+          try {
+            runningJobsCount++
+            pubsub.publish('numRunningJobs', {
+              numRunningJobs: runningJobsCount,
+            })
+            const m = moment().format(displayStringFormat)
+            console.log(`runningJobsCount`, runningJobsCount, `Starting job ${name} at ${m}`)
+            await fn()
+          } finally {
+            runningJobsCount--
+            pubsub.publish('numRunningJobs', {
+              numRunningJobs: runningJobsCount,
+            })
+            const m = moment().format(displayStringFormat)
+            console.log(`runningJobsCount`, runningJobsCount, `Ended job ${name} at ${m}`)
+          }
+        }
+      }
 
       async function doSync() {
         const metadataString = await downloader.downloadMlsMetadata()
@@ -427,7 +442,7 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronTime, doSync)
+          const job = new CronJob(cronTime, jobCountWrapper(`sync ${source.name}`, doSync))
           jobs.push(job)
           const statsSync = statsSyncLib(db)
           statsSync.listen(eventEmitter)
@@ -440,7 +455,7 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronString, doPurge)
+          const job = new CronJob(cronString, jobCountWrapper(`purge ${source.name}`, doPurge))
           jobs.push(job)
           const statsPurge = statsPurgeLib(db)
           statsPurge.listen(eventEmitter)
@@ -453,7 +468,7 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronString, doReconcile)
+          const job = new CronJob(cronString, jobCountWrapper(`reconcile ${source.name}`, doReconcile))
           jobs.push(job)
           const statsReconcile = statsReconcileLib(db)
           statsReconcile.listen(eventEmitter)
