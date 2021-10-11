@@ -39,7 +39,7 @@ import CronStrings from './CronStrings'
 
 export default {
   props: {
-    schedules: Object,
+    schedules: Array,
   },
   components: {
     DisplayDatetime,
