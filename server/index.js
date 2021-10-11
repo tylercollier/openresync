@@ -31,7 +31,13 @@ dotenv.config()
 const userConfig = buildUserConfig()
 const db = knex({
   client: 'mysql2',
-  connection: userConfig.database.connectionString
+  connection: userConfig.database.connectionString,
+  pool: {
+    // Putting min:0 fixes the idle timeout message of:
+    // "Connection Error: Error: Connection lost: The server closed the connection."
+    // See: https://stackoverflow.com/a/55858656/135101
+    min: 0,
+  },
 })
 Model.knex(db)
 
