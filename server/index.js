@@ -314,7 +314,6 @@ const resolvers = {
   Subscription: {
     numRunningJobs: {
       subscribe() {
-        console.log('subscription thing is happening for numRunningJobs')
         return pubsub.asyncIterator(['numRunningJobs'])
       },
     },
@@ -508,5 +507,16 @@ async function runCron() {
   startCronJobs(jobs)
 }
 
+function watchForCrashes() {
+  process.on('uncaughtException', exception => {
+    console.log('exception', exception)
+  })
+
+  process.on('uncaughtRejection', (reason, promise) => {
+    console.log('promise, reason', promise, reason)
+  })
+}
+
+watchForCrashes()
 startServer()
 runCron()
