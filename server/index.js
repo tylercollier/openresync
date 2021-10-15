@@ -481,15 +481,20 @@ function getCronJobs(internalConfig) {
       }
 
       // For debug, to force continuous. Use instead of cron.
-      // (async () => {
-      //   const statsSync = statsSyncLib(db)
-      //   statsSync.listen(eventEmitter)
-      //   while (true) {
-      //     await doSync()
-      //     // logger.debug({ seconds: 5 }, 'Debug wait...')
-      //     // await new Promise(resolve => setTimeout(resolve, 5000))
-      //   }
-      // })()
+      // const reconcileCronEnabled = _.get(sourceConfig, 'cron.reconcile.enabled', true)
+      // if (reconcileCronEnabled) {
+      //   (async () => {
+      //     // const statsSync = statsSyncLib(db)
+      //     // statsSync.listen(eventEmitter)
+      //     const statsReconcile = statsReconcileLib(db)
+      //     statsReconcile.listen(eventEmitter)
+      //     while (true) {
+      //       await doReconcile()
+      //       // logger.debug({ seconds: 5 }, 'Debug wait...')
+      //       // await new Promise(resolve => setTimeout(resolve, 5000))
+      //     }
+      //   })()
+      // }
     }
   })
   return jobs
