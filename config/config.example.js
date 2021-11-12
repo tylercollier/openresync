@@ -10,7 +10,7 @@ const pathLib = require('path')
 
 module.exports = () => ({
   // Use the expected config version. This allows us to detect if you are using improper config.
-  version: '0.1.0',
+  userConfigVersion: '0.2.0',
 
   // sources is an array of objects. Each object is a "source", or a connection to an MLS. However, there is nothing
   // preventing you from connecting to an MLS multiple times if necessary. For example, from a single MLS, if you wanted
