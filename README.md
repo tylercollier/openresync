@@ -1,21 +1,22 @@
 # openresync
 
-Open Real Estate Sync (openresync) is a node application that syncs (replicates) MLS data from one or more sources via the RESO Web API (such as Trestle or Bridge Interactive) to one or more destinations (only MySQL is supported so far), and allows you to see the sync status via a local website.
+Open Real Estate Sync (openresync) is a node application that syncs (replicates) MLS data from one or more sources via the RESO Web API (such as Trestle or Bridge Interactive) to one or more destinations (MySQL and Solr are supported so far, and it's easy enough to add more), and allows you to see the sync status via a local website.
 
 It is meant to be used by developers.
 
 It does the syncing for you, and helps you answer these questions:
 
+* How closely does my data match the MLS's data?
 * When did the last sync occur and was it successful?
 * What is the most recent record (e.g. listing)?
 
 ## Project status
 
-This project is in alpha status. It is meant for those who could benefit from what it does enough to offset the downside of likely bugs.
+This project is in alpha status. It is meant for those who could benefit from what it does enough to offset the downside of likely shortcomings.
 
 The initial major version is 0, which means that [semantic versioning](https://semver.org/) is not yet followed.
 
-This code is not being used in production by the author yet.
+This project is now being used in production by the author, using RECOLORADO and CRMLS (California MLS) via Trestle.
 
 ## Features
 
@@ -23,63 +24,90 @@ This code is not being used in production by the author yet.
 * Sync any number of resources, or subsets using `$filter`
   * You are able to utilize `$select` and `$expand`
 * For each source, you can sync to one or more destinations
-  * At this time, only MySQL is supported as a destination. (Multiple different MySQL destinations could be used.) However, adding a new destination shouldn't be difficult and more are planned.
-  * The destination schema is managed for you. For example, the tables and fields are created if they don't exist.
+  * At this time, MySQL and Solr are supported as destinations. (You could optionally have multiples of each) Adding a new destination type isn't difficult.
+  * The destination schema is managed for you (at least for MySQL). For example, the tables and fields are created if they don't exist.
 * Logging is done in [ndjson](http://ndjson.org/) format, so that if you have to go digging through the logs, this is as easy as possible. Be sure to look into [pino-pretty](https://github.com/pinojs/pino-pretty), which is a dev dependency, so you can use it with e.g. `cat somelogfile | npx pino-pretty`.
+* A local website runs so you can see the sync stats.
 
 ### Screenshots
 
 Sync from multiple sources (MLSs):
 
-![Sync from multiple sources (MLSs)](https://user-images.githubusercontent.com/366538/114815106-65815100-9d6a-11eb-8cf2-7ae0dd78146f.png)
+![Sync from multiple sources (MLSs)](https://user-images.githubusercontent.com/366538/141699264-3c50c475-8c73-4981-90dd-69e4849ab608.png)
 
 See details per source, such as the cron schedule, how many records are in the MLS vs in your destinations, and the sync (and purge) histories:
 
-![See details per source](https://user-images.githubusercontent.com/366538/114815112-69ad6e80-9d6a-11eb-8e3e-89f828c9ecab.png)
+![See details per source](https://user-images.githubusercontent.com/366538/141699258-73cb1fa8-3d06-40de-8840-c94c3fffddd0.png)
 
-See all the corn schedules at once, which makes it easier to not overlap them:
+See all the cron schedules at once, which makes it easier to not overlap them:
 
-![See all the cron schedules at once](https://user-images.githubusercontent.com/366538/114815117-6c0fc880-9d6a-11eb-8751-6683b8569238.png)
+![See all the cron schedules at once](https://user-images.githubusercontent.com/366538/141699270-975690d3-7bea-46d7-a8ad-83813a5298f4.png)
 
 ## How do I use it?
 
-Install the app, configure it, start the back-end server, start the web server, and visit the local website that runs.
+Install the app, configure it, build it, start the back-end server (and optionally start the dev web server), and visit the local website that runs. These are described in the following steps.
 
 ### Installation
 
-`$ git clone https://github.com/tylercollier/openresync`
-
-`$ npm install`
+```
+$ git clone https://github.com/tylercollier/openresync
+$ npm install
+```
 
 ### Configure it
 
-Configuration is a larger topic with its own dedicated section
+Configuration is a larger topic with its own dedicated section below.
+
+### Build it
+
+If you are running in production, you need to build the JS and CSS assets.
+
+```
+$ npm run build
+```
+
+> If you run the dev web server, you do not need to build.
 
 ### Run it
 
 #### Start the server
 
-`npm run dev`
+**Here's how to run it in production:**
 
-#### Start the front-end server
+```
+$ NODE_ENV=production TZ=UTC node server/index.js
+```
 
-`npm run serve`
+Then visit the website at http://localhost:4000
+
+You might also want to add this environment variable: `NODE_OPTIONS=--max_old_space_size=4096`. That sets the max memory allowed by node, in kilobytes (node's default is 2048). It's only necessary when you are using the reconcile process on large datasets, so it's suggested you only use it if you get out-of-memory errors.
+
+**Here's how to run it in development:**
+
+> If you run this dev web server, you do not need to run the build step above.
+
+The following will start nodemon and watch several directories and restart the server when any files are changed. The second line starts the front-end (webpack) dev server for when you change Vue components.
+
+```
+$ npm run dev
+$ npm run serve
+```
 
 Then visit the website at http://localhost:3461
 
-#### How to run in production
-
-As mentioned, this code is not yet being run in production by the author yet. You do so at your own risk.
-
 ## Configuration
 
-See the heavily commented `config/config.example.js`. Copy it to `config/config.js` and edit it according to your needs.
+See the heavily commented `config/config.example.js`. Copy it to `config/config.js` and edit it according to your needs. At a high level, you'll be specifying:
+
+* sources: where to download data from
+* resources: which data to download from the MLS, e.g. Property, Media, Member, etc
+* destinations: where to put that data
 
 There is an internal configuration file you should be aware of, which is described in the "How does it work?" section.
 
 ### .env
 
-It's recommended to put secrets in a .env file. These will be read automatically using the `dotenv` library and available for your config file in `process.env` values.
+It's recommended to put secrets in a `.env` file. These will be read automatically using the `dotenv` library and available for your config file in `process.env` values.
 
 There's no `example.env` type of file because there are no standard fields you should configure. For example, in a project that uses the Austin Board of Realtors sample dataset, you might use environment variables like ABOR_CLIENT_ID and ABOR_CLIENT_SECRET to store your Oauth credentials, and then you could reference them with e.g. `process.env.ABOR_CLIENT_ID` in your `config/config.js` file. There's no particular recommendation other than you keep your secrets out of the git repository.
 
@@ -89,44 +117,70 @@ You should know these basics so you can debug problems.
 
 This level of detail is supplied because this is alpha software, and as such the likelyhood that you'll discover a bug is higher. Your feedback is appreciated.
 
-### Server
-
-The server is responsible for hosting the cron jobs that do the sync work as well as providing an API for the website that shows the stats.
-
 ### Sync (aka replication) process
 
-There is an initial sync and an ongoing sync. The initial sync could take hours depending on the platform and number of records in the MLS and if you filter out any. The ongoing sync would be expected to only take a minute or less if you run it say every 15 minutes.
+To properly replicate MLS data via the RESO Web API, there are 3 processes which you must understand. They are `sync`, `purge`, and `reconcile`, and are described below. For an MLS with few records, you could get away with only using reconcile and purge, but it's probably best to use all 3.
 
-At a high level, first the data is downloaded from the MLS and put into files in a different directory for each resource. Once all are successfully downloaded, the sync process will go through all the files and sync the data to each destination. If there is an error, it will be logged, and retried on the next run.
+A note on the terms: there are no industry standard names for these processes, so their meanings as used in this project might not have the exact same meaning elsewhere.
 
-#### Download
+#### Overview
 
-For each MLS source, and for each of its resources, we need to determine if this is the first sync, or if we have synced before and we should supply a `$filter=ModificationTimestamp gt X` query parameter. The former is just a special case of the latter and we use a timestamp of the Unix epoch. To get the timestamps, we first look if there are any previously downloaded files, and if so the latest file will be used. Otherwise, we look into the first destination specified (all destinations would be expected to report the same value though).
+Each of the 3 processes is described below, but let's take a minute to describe what's happening at a high level.
 
-Whenever you start a download, we create a batch ID, which is basically a timestamp, and if you resume, we find the oldest batch ID. The JSON files will be downloaded to the directory `config/sources/${sourceName}/downloadedData/${resourceName}`, where the file name is based on the batch ID as well as when that particular file finished downloading. There will be multiple files if there are more records to download than the MLS allows in a single page.
+Each process does 3 things:
 
-Only after all resources are downloaded do we consider the download batch successful. Until it is, we use the internal config (described below) to track where we are in the process. When complete, we remove the download batch section in the internal config.
+1. Determine what needs to be downloaded
+2. Connect to the MLS and download the data
+3. Process the data, meaning alter the destinations by inserting/updating/deleting data
 
-#### The sync process (insert into destinations)
+When the data is downloaded, it is always completely downloaded before it is processed. There will be multiple files if there are more records to download than the MLS allows in a single page.
 
-When the actual sync process runs, as in the portion that takes the data from the downloaded JSON files and inserts (or updates) the data in the destinations, it will determine the oldest batch based on filenames in the downloaded data directories, and then process all the files with that batch ID, from oldest to newest. It will process the files one by one. It will insert into each destination, until that destination reports success, before moving on to the next file. This is so that each destination is as close to in sync as possible, as opposed to syncing all files for the batch to one destination, and then doing all files for the next destination, and so on. After the file has been used to insert data into each destination successfully, it is deleted.
+Downloaded data is stored in the following subdirectory of the project: `config/sources/${sourceName}/downloadedData/${resourceName}/`. So if you had named a source `abor_Trestle` and the resource name was `Property`, the path would be `config/sources/abor_Trestle/downloadedData/Property`.
 
-If an error occurs, this is recorded in the internal config, but the sync will be retried as part of the next cron job. However if 3 errors occur, no attempt to process will be made. You will need to examine the failure and resolve.
+The file names of downloaded data follow a pattern. It's this: `${type}_batch_${batchId}_seq_${timestamp}.json`, where:
 
-### Purge (aka reconciliation) process
+* `type` is one of the 3 processes (the `reconcile` process also has subprocesses that use `missing` and `missingIds`)
+* `batchId` is a timestamp of when the process was started
+* `sequenceId` is a timestamp of when the particular file finished downloading (there might be many files per batch)
+
+After the data is downloaded, it will be processed in a batch, matching all files with the oldest batch ID. The files will be processed in order, looping over each destination before moving on to the next file. This is so that each destination is as close to in-sync as possible (as opposed to syncing all files for the batch to one destination, and then doing all files for the next destination, and so on). After the file has been used for each destination successfully, it is deleted.
+
+For each of the processes, the state is recorded in the internal config file (discussed below). This allows the processes to resume from where they left off, whether they were in the middle of downloading a batch of data, or processing the downloaded files. The exception is the purge process, which always starts over. If an error occurs, this will be recorded. And if 3 errors occur for a process, that process will not be tried again; you will need to examine the error and resolve it.
+
+#### Sync
+
+The sync process adds or updates records (no deletions). To know what to download from the MLS, the destination (or first destination, if you have multiple) is queried to get the most recent timestamp. Then, the MLS is queried for records with a newer timestamp. If there is an error when downloading the files, then when the sync process is next run, instead of querying the destination for the newest record, it will look newest record in the newest file.
+
+Note that the first sync might take hours depending on the platform and number of records in the MLS and if you filter any out. However, subsequent syncs generally run quite quickly so it's reasonable to run it, say, every 15 minutes.
+
+#### Purge
+
+Purging is when the MLS removes records. We need to mirror those removals, removing those same records from our destinations. To be able to know which records have been removed, we download all the IDs from the MLS, and compare them to the IDs in each of our destinations. It therefore takes longer than the sync process and uses more memory.
 
 The purge process is similar to the sync process but differs in 2 important ways.
 
 1. There is no resuming the download process. It always downloads the entirety of the data. This is unfortunate and could be improved but is the simplest approach to handle Trestle and Bridge Interactive in the same way, which reduces code complexity.
-1. The downloaded files are not processed one by one, but instead must be loaded into memory all at once to compare to what's in the destinations. After the purge is complete, all downloaded files for the resource are deleted.
+2. The downloaded files are not processed one by one, but instead must be loaded into memory all at once to compare to what's in the destinations. After the purge is complete, all downloaded files for the resource are deleted.
+
+Trestle calls purging "reconciliation" in their docs. Do not confuse it with our dis-similar reconcile process.
+
+#### Reconcile
+
+Reconciling ensures all your records match what's in the MLS by getting what's missing or different from the MLS (thus it never deletes data). In theory, the sync process should be all you need to get data into your destinations, but in practice, records are missed frequently.
+
+You could also have some arbitrary requirement to update a subset of records. All you'd need to do is modify one of the timestamp fields on any such records, and the reconcile process would get/update them.
+
+It works like this. First it downloads IDs and timestamps for each record in the resource (these files start with `reconcile_batch`). Then it grabs the IDs and timestamps for each record from each destination. For any IDs that are missing or timestamps that don't match between the MLS or one of the destinations, the ID is recorded into a file whose name starts with `missingIds_batch`. This file is then read and all records are downloaded using `$filter=` with a list of IDs, resulting in files whose names start with `missing_batch`.
+
+The `missing_batch` files are then processed, inserting/updating into the destination(s).
 
 ### Stats
 
-As the program runs, it records certain statistics in the configured database, such as when a sync starts, finishes, whether it was successful, how many records were synced etc. It is these stats that are shown on the website. To see which tables are created, check `lib/stats/setUp.js`.
+As the program runs, it records certain statistics in the configured database, such as when a sync starts, finishes, whether it was successful, how many records were synced, etc. It is these stats that are shown on the website. To see which tables are created, check `lib/stats/setUp.js`.
 
 ### Internal config
 
-As the program runs, it records its internal state in a file at `config/internalConfig.json`. For example, for each MLS source, it captures where it's at in the download process, and the sync and purge processes, including each resource and destination. This is so it knows where to resume if there is a problem.
+As the program runs, it records its internal state in a file at `config/internalConfig.json`. For example, for each MLS source, it captures where it's at in the download process, as well as the sync, purge, and reconcile processes, including each resource and destination. This is so it knows where to resume if there is a problem.
 
 ### Logging
 
@@ -141,8 +195,8 @@ It is not recommended to change any code. Or if you do, do so in a new branch. O
 
 ## Q&A
 
-**Q:** Why would I use this tool and sync data locally, rather than querying the RESO Web API directly?  
-**A:** It's true that the RESO Web API is generally superior to the older RETS standard, and one reason is it allows you to efficiently query the API for specific results that could then e.g. be shown on a website. However, here are a number of use cases to sync the data locally. (If you don't fit into any of the cases listed below, then you will probably be better off querying the MLS platform directly.)
+**Question:** Why would I use this tool and sync data locally, rather than querying the RESO Web API directly?  
+**Answer:** It's true that the RESO Web API is generally superior to the older RETS standard, and one reason is it allows you to efficiently query the API for specific results that could then e.g. be shown on a website. However, here are a number of use cases to sync the data locally.
 
   In the following list, there are ideas that are beyond what this application does on its own. But you'd have the power to take things another step and accomplish things the RESO Web API can't.
 
@@ -155,25 +209,28 @@ It is not recommended to change any code. Or if you do, do so in a new branch. O
     * E.g. say I want to do a query to see where ModificationTimestamp != MediaModificationTimestamp on the Media resource. But you can't do such a complex query in RESO Web API.
   * Basically anything the RESO Web API doesn't offer. For example, some platforms offer polygon searches. But you can't e.g. search with a simple centroid and radius. If you build your own API using the data synced by this tool, you could do such a thing.
 
+(If you don't fit into any of the cases listed above, then you will probably be better off querying the MLS platform directly.)
+
 Another advantage of syncing the data and creating your own API is you basically avoid quota limits.
 
-**Q:** So it just syncs the data? Is that useful? Can I e.g. show the data on a website?  
-**A:** Yes, it just syncs the data. But this is the mission of this project and should be a large chunk of any work needed to produce a project that uses the data. You'll still have work left to do such as field mapping (especially if you use multiple MLS sources and intend to harmonize their data and show it in one place consistently). Of course whether you're allowed to show the data publicly is a legal concern you'll need to talk with each MLS about.
+**Question:** So it just syncs the data? Is that useful? Can I e.g. show the data on a website?  
+**Answer:** Yes, it just syncs the data. But this is the mission of this project and should be a large chunk of any work needed to produce a project that uses the data. You'll still have work left to do such as field mapping (especially if you use multiple MLS sources and intend to harmonize their data and show it in one place consistently). Of course whether you're allowed to show the data publicly is a legal concern you'll need to talk with each MLS about.
 
-**Q:** How many sources can I realistically sync at once?  
-**A:** Not sure. I haven't tried more than one at a time. Because a lot of the work done can be offloaded from node (e.g. downloading files, writing JSON files to disk, sending data to MySQL, etc), it's likely a bunch. I would still recommend trying to offset the cron schedules from one another. Another factor is if you'll be writing to the same table or different ones. For example, if you're just doing Property records from different MLSs and write to a single Property table, you might get lock problems. But if you use different MySQL databases per source, or use the `makeTableName` concept to prefix your table names such that two sync processes aren't writing to the same table, MySQL will probably be able to handle it just fine.
+**Question:** How many sources can I realistically sync at once?  
+**Answer:** Because a lot of the work done can be offloaded from node (e.g. downloading files, writing JSON files to disk, sending data to MySQL, etc), it's likely a bunch. (I'm currently doing 6 in production.) I would still recommend trying to offset the cron schedules from one another. For example, if you sync source A every 15 minutes starting on the hour, you might consider syncing source B every 15 minutes starting at 5 minutes past the hour. Another factor is if you'll be writing to the same table or different ones. For example, if you're just doing Property records from different MLSs and write to a single Property table, you might get lock problems. But if you use different MySQL databases per source, or use the `makeTableName` concept to prefix your table names such that two sync processes aren't writing to the same table, MySQL will probably be able to handle it just fine.
 
-**Q:** Do I have to use the web server?  
-**A:** No. You could use the code in the `lib/sync` dir as a library and run the download, sync, and purge processes as you see fit. See `lib/sync/go.js` as an example. I intend to turn the sync code into its own npm module.
+**Question:** Do I have to use the web server?  
+**Answer:** No. You could use the code in the `lib/sync` dir as a library and run the download, sync, and purge processes as you see fit. See `lib/sync/go.js` as an example. I intend to turn the sync code into its own npm module eventually.
 
 ## Known limitations
 
 1. One of the main value propositions of this application is to make it robust in error handling. It is desired that the application not crash and wisely show error situations to the user. However, this has not been tested thoroughly. Some errors might be swallowed altogether. Some errors are quite verbose and we don't shorten these yet. It would definitely be great to catch 502 and 504 errors from the platforms and retry downloads, but this is not done yet.
+1. The Solr data adapter does not yet sync/manage the schema for you (though the MySQL data adapter does).
 
 ## Roadmap
 
-* Force a sync to occur
-  * Or a purge
+* From the website, allow the user to force a sync to occur
+  * Or a purge, or reconcile
 * Get me the data for record X from the MLS
   * As in, allow me to type in a ListingId, MemberKey, etc, etc, and show it to me in a user-friendly way, and allow me to compare it to what's in the destinations.
 * During a sync, how many have been synced so far, how many to go, and estimate of completion time
