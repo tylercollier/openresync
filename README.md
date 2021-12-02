@@ -1,4 +1,6 @@
-# openresync
+# OpenReSync
+
+![OpenReSync logo](https://user-images.githubusercontent.com/366538/144324447-cfa1c275-9bad-47d7-aff5-57a3af297f48.png)
 
 Open Real Estate Sync (openresync) is a node application that syncs (replicates) MLS data from one or more sources via the RESO Web API (such as Trestle or Bridge Interactive) to one or more destinations (MySQL and Solr are supported so far, and it's easy enough to add more), and allows you to see the sync status via a local website.
 
@@ -10,13 +12,17 @@ It does the syncing for you, and helps you answer these questions:
 * When did the last sync occur and was it successful?
 * What is the most recent record (e.g. listing)?
 
+## Website
+
+Want to convince your boss to use this tool, so that you can actually spend your time working on your team's product instead of syncing MLS data? Send them to https://openresync.com.
+
 ## Project status
 
 This project is in alpha status. It is meant for those who could benefit from what it does enough to offset the downside of likely shortcomings.
 
 The initial major version is 0, which means that [semantic versioning](https://semver.org/) is not yet followed.
 
-This project is now being used in production by the author, using RECOLORADO and CRMLS (California MLS) via Trestle.
+This project is now being used in production by the author, using RECOLORADO and CRMLS (California Regional MLS) via Trestle.
 
 ## Features
 
@@ -24,8 +30,8 @@ This project is now being used in production by the author, using RECOLORADO and
 * Sync any number of resources, or subsets using `$filter`
   * You are able to utilize `$select` and `$expand`
 * For each source, you can sync to one or more destinations
-  * At this time, MySQL and Solr are supported as destinations. (You could optionally have multiples of each) Adding a new destination type isn't difficult.
-  * The destination schema is managed for you (at least for MySQL). For example, the tables and fields are created if they don't exist.
+  * At this time, MySQL and Solr are supported as destinations. You could have any number of such destinations. Adding a new destination type isn't difficult.
+  * The destination schema is managed for you (at least for MySQL). The tables and fields are created if they don't exist.
 * Logging is done in [ndjson](http://ndjson.org/) format, so that if you have to go digging through the logs, this is as easy as possible. Be sure to look into [pino-pretty](https://github.com/pinojs/pino-pretty), which is a dev dependency, so you can use it with e.g. `cat somelogfile | npx pino-pretty`.
 * A local website runs so you can see the sync stats.
 
@@ -214,7 +220,10 @@ It is not recommended to change any code. Or if you do, do so in a new branch. O
 Another advantage of syncing the data and creating your own API is you basically avoid quota limits.
 
 **Question:** So it just syncs the data? Is that useful? Can I e.g. show the data on a website?  
-**Answer:** Yes, it just syncs the data. But this is the mission of this project and should be a large chunk of any work needed to produce a project that uses the data. You'll still have work left to do such as field mapping (especially if you use multiple MLS sources and intend to harmonize their data and show it in one place consistently). Of course whether you're allowed to show the data publicly is a legal concern you'll need to talk with each MLS about.
+**Answer:** Yes, it just syncs the data. But this is the mission of this project and should be a large chunk of any work needed to produce your own project that uses the data. You'll still have work left to do such as field mapping (especially if you use multiple MLS sources and intend to harmonize their data and show it in one place consistently). Of course whether you're allowed to show the data publicly is a legal concern you'll need to talk with each MLS about.
+
+**Question:** Can I use other RESO Web API sources besides Trestle or Bridge?
+**Answer:** Yes! Others like [Spark](https://landing.sparkplatform.com/) haven't been tested yet, but the codebase is set up to add more without too much work.
 
 **Question:** How many sources can I realistically sync at once?  
 **Answer:** Because a lot of the work done can be offloaded from node (e.g. downloading files, writing JSON files to disk, sending data to MySQL, etc), it's likely a bunch. (I'm currently doing 6 in production.) I would still recommend trying to offset the cron schedules from one another. For example, if you sync source A every 15 minutes starting on the hour, you might consider syncing source B every 15 minutes starting at 5 minutes past the hour. Another factor is if you'll be writing to the same table or different ones. For example, if you're just doing Property records from different MLSs and write to a single Property table, you might get lock problems. But if you use different MySQL databases per source, or use the `makeTableName` concept to prefix your table names such that two sync processes aren't writing to the same table, MySQL will probably be able to handle it just fine.
