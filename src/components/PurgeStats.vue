@@ -17,14 +17,14 @@
           <tbody>
           <template v-for="purgeSource of stats">
             <tr :key="purgeSource.id">
-              <td>{{ getDisplayDatetime(convertBatchIdToTimestamp(purgeSource.batch_id)) }}</td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(purgeSource.batch_id)" /></td>
               <td>
                 <b-icon v-if="purgeSource.result === 'success'" icon="check-circle" variant="success" title="All resources were fully purged" />
                 <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully purged" />
               </td>
               <td>{{ purgeSource.error }}</td>
-              <td>{{ getDisplayDatetime(purgeSource.created_at) }}</td>
-              <td>{{ getDisplayDatetime(purgeSource.updated_at) }}</td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(purgeSource.created_at)" /></td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(purgeSource.updated_at)" /></td>
               <td><b-button @click="expand(purgeSource.id)" variant="outline-secondary" size="sm">Detail</b-button></td>
             </tr>
             <template v-if="purgeSource.id in expanded">

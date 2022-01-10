@@ -10,7 +10,12 @@
         <b-card-title class="tw-font-bold">{{sourceName}}</b-card-title>
         <b-card-text>
           <div v-if="s.sync.length">
-            <div>Last sync batch:<div class="tw-ml-4" style="color: #388dc0;">{{ s.sync[0].batch_id }}</div></div>
+            <div>
+              Last sync batch:
+              <div class="tw-ml-4" style="color: #388dc0;">
+                <display-datetime :datetime="convertBatchIdToTimestamp(s.sync[0].batch_id)" />
+              </div>
+            </div>
             <div>Status:
               <b-icon v-if="s.sync[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully synced" />
               <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully synced" />
@@ -20,8 +25,13 @@
             <em>Never synced</em>
           </div>
           <div v-if="s.purge.length" class="tw-mt-2">
-            <div>Last purge batch:<div class="tw-ml-4" style="color: #388dc0;">{{ s.purge[0].batch_id }}</div></div>
-            <div>Status:
+            <div>Last purge batch:
+              <div class="tw-ml-4" style="color: #388dc0;">
+                <display-datetime :datetime="convertBatchIdToTimestamp(s.purge[0].batch_id)" />
+              </div>
+            </div>
+            <div>
+              Status:
               <b-icon v-if="s.purge[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully purged" />
               <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully purged" />
             </div>
@@ -33,7 +43,12 @@
             <div>-</div>
           </div>
           <div v-if="s.reconcile.length" class="tw-mt-2">
-            <div>Last reconcile batch:<div class="tw-ml-4" style="color: #388dc0;">{{ s.reconcile[0].batch_id }}</div></div>
+            <div>
+              Last reconcile batch:
+              <div class="tw-ml-4" style="color: #388dc0;">
+                <display-datetime :datetime="convertBatchIdToTimestamp(s.reconcile[0].batch_id)" />
+              </div>
+            </div>
             <div>Status:
               <b-icon v-if="s.reconcile[0].result === 'success'" icon="check-circle" variant="success" title="All resources were fully reconciled" />
               <b-icon v-else icon="x-circle" variant="danger" title="Not all resources were fully reconciled" />
@@ -57,10 +72,14 @@ import groupBy from 'lodash/groupBy'
 import union from 'lodash/union'
 import keyBy from 'lodash/keyBy'
 import mapValues from 'lodash/mapValues'
+import { convertBatchIdToTimestamp } from '../../lib/sync/utils/datetime'
 
 export default {
   props: {
     stats: Object,
+  },
+  methods: {
+    convertBatchIdToTimestamp,
   },
   computed: {
     groupedStats() {

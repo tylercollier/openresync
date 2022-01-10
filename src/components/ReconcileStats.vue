@@ -17,14 +17,14 @@
           <tbody>
           <template v-for="reconcileSource of stats">
             <tr :key="reconcileSource.id">
-              <td>{{ getDisplayDatetime(convertBatchIdToTimestamp(reconcileSource.batch_id)) }}</td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(reconcileSource.batch_id)" /></td>
               <td>
                 <b-icon v-if="reconcileSource.result === 'success'" icon="check-circle" variant="success" title="All resources fully reconciled" />
                 <b-icon v-else icon="x-circle" variant="danger" title="Not all resources fully reconciled" />
               </td>
               <td>{{ reconcileSource.error }}</td>
-              <td>{{ getDisplayDatetime(reconcileSource.created_at) }}</td>
-              <td>{{ getDisplayDatetime(reconcileSource.updated_at) }}</td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(reconcileSource.created_at)" /></td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(reconcileSource.updated_at)" /></td>
               <td><b-button @click="expand(reconcileSource.id)" variant="outline-secondary" size="sm">Detail</b-button></td>
             </tr>
             <template v-if="reconcileSource.id in expanded">

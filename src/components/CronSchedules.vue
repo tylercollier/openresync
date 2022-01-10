@@ -2,7 +2,7 @@
   <div class="g">
     <div><span class="tw-font-bold">Next sync:</span></div>
     <div class="ml-2">
-      <DisplayDatetime style="color: #388dbf;" v-if="schedules.length && schedules[0].sync" :datetime="schedules[0].sync.nextDate"/>
+      <display-datetime style="color: #388dbf;" v-if="schedules.length && schedules[0].sync" :datetime="schedules[0].sync.nextDate"/>
     </div>
     <div><span class="tw-font-bold">Sync schedule:</span></div>
     <div class="ml-2">
@@ -12,7 +12,7 @@
     </div>
     <div><span class="tw-font-bold">Next purge:</span></div>
     <div class="ml-2">
-      <DisplayDatetime style="color: #388dbf;" v-if="schedules.length && schedules[0].purge" :datetime="schedules[0].purge.nextDate"/>
+      <display-datetime style="color: #388dbf;" v-if="schedules.length && schedules[0].purge" :datetime="schedules[0].purge.nextDate"/>
     </div>
     <div><span class="tw-font-bold">Purge schedule:</span></div>
     <div class="ml-2">
@@ -22,7 +22,7 @@
     </div>
     <div><span class="tw-font-bold">Next reconcile:</span></div>
     <div class="ml-2">
-      <DisplayDatetime style="color: #388dbf;" v-if="schedules.length && schedules[0].reconcile" :datetime="schedules[0].reconcile.nextDate"/>
+      <display-datetime style="color: #388dbf;" v-if="schedules.length && schedules[0].reconcile" :datetime="schedules[0].reconcile.nextDate"/>
     </div>
     <div><span class="tw-font-bold">Reconcile schedule:</span></div>
     <div class="ml-2">
@@ -34,7 +34,6 @@
 </template>
 
 <script>
-import DisplayDatetime from './DisplayDatetime'
 import CronStrings from './CronStrings'
 
 export default {
@@ -42,7 +41,6 @@ export default {
     schedules: Array,
   },
   components: {
-    DisplayDatetime,
     CronStrings,
   },
 }

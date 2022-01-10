@@ -1,0 +1,4 @@
+/* The built-in tooltip max-width of 200px moves the timezone to a second line. Let's allow slightly wider. */
+.tooltip-inner {
+  max-width: 220px;
+}

@@ -1,6 +1,8 @@
 <template>
   <span>
-    <template v-if="datetime">{{getDisplayDatetime(datetime)}}</template>
+    <template v-if="datetime">
+      <span v-b-tooltip.hover :title="getOtherDisplayDatetime(datetime)">{{getPreferredDisplayDatetime(datetime)}}</span>
+    </template>
     <template v-else>N/A</template>
   </span>
 </template>
@@ -13,9 +15,12 @@ export default {
     // We expect a moment object or a string like from the database
     datetime: [Object, String],
   },
-  data() {
-    return {
-      getDisplayDatetime,
+  methods: {
+    getPreferredDisplayDatetime(datetime) {
+      return getDisplayDatetime(datetime, this.$globals.useRelativeTime)
+    },
+    getOtherDisplayDatetime(datetime) {
+      return getDisplayDatetime(datetime, !this.$globals.useRelativeTime)
     }
   },
 }

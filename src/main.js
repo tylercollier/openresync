@@ -8,11 +8,13 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 import { split } from 'apollo-link'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
+import { merge } from 'lodash'
 import router from './routes'
+import settings from './settings'
 import './components/index'
 
 import './assets/tailwind.css'
-import '../lib/bootstrap/init'
+import './lib/bootstrap/init'
 import './assets/index.scss'
 
 const httpLink = createHttpLink()
@@ -57,6 +59,16 @@ const apolloProvider = new VueApollo({
 Vue.use(VueRouter)
 
 Vue.config.productionTip = false
+
+const defaultSettings = {
+  version: '0.0.1',
+  useRelativeTime: false,
+}
+const savedSettings = settings.getSettings()
+const globalStore = new Vue({
+  data: merge(defaultSettings, savedSettings),
+})
+Vue.prototype.$globals = globalStore
 
 new Vue({
   render: h => h(App),

@@ -46,7 +46,7 @@
                 </code>
               </template>
             </td>
-            <td><template v-if="cronSchedule.sync"><DisplayDatetime :datetime="cronSchedule.sync.nextDate" /></template></td>
+            <td><template v-if="cronSchedule.sync"><display-datetime :datetime="cronSchedule.sync.nextDate" /></template></td>
             <td>
               <template v-if="cronSchedule.purge">
                 <code class="tw-text-black">
@@ -54,7 +54,7 @@
                 </code>
               </template>
             </td>
-            <td><template v-if="cronSchedule.purge"><DisplayDatetime :datetime="cronSchedule.purge.nextDate" /></template></td>
+            <td><template v-if="cronSchedule.purge"><display-datetime :datetime="cronSchedule.purge.nextDate" /></template></td>
             <td>
               <template v-if="cronSchedule.reconcile">
                 <code class="tw-text-black">
@@ -62,7 +62,7 @@
                 </code>
               </template>
             </td>
-            <td><template v-if="cronSchedule.reconcile"><DisplayDatetime :datetime="cronSchedule.reconcile.nextDate" /></template></td>
+            <td><template v-if="cronSchedule.reconcile"><display-datetime :datetime="cronSchedule.reconcile.nextDate" /></template></td>
           </tr>
           </tbody>
         </b-table-simple>
@@ -73,7 +73,6 @@
 
 <script>
 import QueryLoader from './QueryLoader'
-import DisplayDatetime from './DisplayDatetime'
 import CronStrings from './CronStrings'
 
 export default {
@@ -85,7 +84,6 @@ export default {
   },
   components: {
     QueryLoader,
-    DisplayDatetime,
     CronStrings,
   },
 }

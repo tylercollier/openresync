@@ -17,14 +17,14 @@
           <tbody>
           <template v-for="syncSource of stats">
             <tr :key="syncSource.id">
-              <td>{{ getDisplayDatetime(convertBatchIdToTimestamp(syncSource.batch_id)) }}</td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(syncSource.batch_id)" /></td>
               <td>
                 <b-icon v-if="syncSource.result === 'success'" icon="check-circle" variant="success" title="All resources fully synced" />
                 <b-icon v-else icon="x-circle" variant="danger" title="Not all resources fully synced" />
               </td>
               <td>{{ syncSource.error }}</td>
-              <td>{{ getDisplayDatetime(syncSource.created_at) }}</td>
-              <td>{{ getDisplayDatetime(syncSource.updated_at) }}</td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(syncSource.created_at)" /></td>
+              <td><display-datetime :datetime="convertBatchIdToTimestamp(syncSource.updated_at)" /></td>
               <td><b-button @click="expand(syncSource.id)" variant="outline-secondary" size="sm">Detail</b-button></td>
             </tr>
             <template v-if="syncSource.id in expanded">
@@ -82,12 +82,12 @@ export default {
   },
   data() {
     return {
-      convertBatchIdToTimestamp,
-      getDisplayDatetime,
       expanded: {},
     }
   },
   methods: {
+    convertBatchIdToTimestamp,
+    getDisplayDatetime,
     expand(sourceId) {
       if (sourceId in this.expanded) {
         this.$delete(this.expanded, sourceId)
