@@ -11,17 +11,13 @@
 </template>
 
 <script>
+import { makeGlobalSettings } from '../lib/utils/index'
+
 export default {
   computed: {
-    useRelativeTime: {
-      get() {
-        return this.$globals.useRelativeTime
-      },
-      set() {
-        this.$globals.useRelativeTime = !this.$globals.useRelativeTime
-        this.$globals.save()
-      },
-    },
+    ...makeGlobalSettings({
+      useRelativeTime: 'useRelativeTime',
+    }),
   },
 }
 </script>

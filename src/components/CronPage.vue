@@ -101,6 +101,7 @@ import QueryLoader from './QueryLoader'
 import DisplayDatetime from './DisplayDatetime'
 import CronStrings from './CronStrings'
 import orderBy from 'lodash/orderBy'
+import { makeGlobalSettings } from '../lib/utils/index'
 
 const orderByOptions = [
   { text: 'Sources listed in user config', value: 'userConfig' },
@@ -120,15 +121,10 @@ export default {
     }
   },
   computed: {
-    orderByName: {
-      get() {
-        return this.$globals.cronPage.orderByName
-      },
-      set(val) {
-        this.$globals.cronPage.orderByName = val
-        this.$globals.save()
-      },
-    },
+    // orderByName: utils.makeGlobalSetting('cronPage.orderByName'),
+    ...makeGlobalSettings({
+      orderByName: 'cronPage.orderByName',
+    }),
   },
   methods: {
     orderedCronSchedules(schedules, orderByName) {
