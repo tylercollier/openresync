@@ -15,9 +15,7 @@ function makeGlobalSetting(path) {
 }
 
 function makeGlobalSettings(namesAndPaths) {
-  const x = mapValues(namesAndPaths, makeGlobalSetting)
-  console.log('x', x)
-  return x
+  return  mapValues(namesAndPaths, makeGlobalSetting)
 }
 
 export {

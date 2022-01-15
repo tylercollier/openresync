@@ -24,7 +24,7 @@
       `"
         :variables="{ sourceName }"
       >
-        <template v-slot="data">
+        <template v-slot="{ data }">
           <h2 class="tw-mb-4" style="color: #388dbf;">Cron Schedules</h2>
           <CronSchedules :schedules="data.cronSchedules" />
         </template>

@@ -16,7 +16,7 @@
     `"
     :variables="{ sourceName }"
   >
-    <template v-slot="data">
+    <template v-slot="{ data }">
       <StatsDetails :stats="data.syncStatsDetails" />
     </template>
   </QueryLoader>

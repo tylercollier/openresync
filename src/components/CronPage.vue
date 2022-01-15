@@ -26,7 +26,12 @@
       `"
       :variables="{ sourceName }"
     >
-      <template v-slot="data">
+      <template v-slot="{ data, refresh }">
+        <div class="mb-4">
+          <b-button @click="refresh" size="sm" variant="outline-success">
+            <b-icon icon="arrow-repeat" /> Refresh
+          </b-button>
+        </div>
         <b-table-simple v-if="orderByName === 'userConfig'" small striped hover>
           <thead>
           <tr>

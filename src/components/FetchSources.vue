@@ -11,7 +11,7 @@
         }
       `"
     >
-      <template v-slot="data">
+      <template v-slot="{ data }">
         <slot :sources="data.userConfig.sources"></slot>
       </template>
     </QueryLoader>
