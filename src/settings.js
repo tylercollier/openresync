@@ -1,4 +1,4 @@
-const key = 'settings'
+const key = 'openresync:settings'
 
 function saveSettings(settings) {
   localStorage.setItem(key, JSON.stringify(settings))

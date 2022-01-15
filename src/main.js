@@ -63,10 +63,22 @@ Vue.config.productionTip = false
 const defaultSettings = {
   version: '0.0.1',
   useRelativeTime: false,
+  cronPage: {
+    orderByName: 'userConfig'
+  }
 }
 const savedSettings = settings.getSettings()
+const mergedSettings = merge(defaultSettings, savedSettings)
 const globalStore = new Vue({
-  data: merge(defaultSettings, savedSettings),
+  data: mergedSettings,
+  methods: {
+    save() {
+      const temp = Object.assign({}, globalStore.$data)
+      // $apolloData must get added automatically somewhere. Remove it.
+      delete temp.$apolloData
+      settings.saveSettings(temp)
+    },
+  },
 })
 Vue.prototype.$globals = globalStore
 
