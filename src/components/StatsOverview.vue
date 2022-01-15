@@ -9,7 +9,7 @@
       >
         <b-card-title class="tw-font-bold">{{sourceName}}</b-card-title>
         <b-card-text>
-          <div v-if="s.sync.length">
+          <div v-if="s.sync && s.sync.length">
             <div>
               Last sync batch:
               <div class="tw-ml-4" style="color: #388dc0;">
@@ -24,7 +24,7 @@
           <div v-else>
             <em>Never synced</em>
           </div>
-          <div v-if="s.purge.length" class="tw-mt-2">
+          <div v-if="s.purge && s.purge.length" class="tw-mt-2">
             <div>Last purge batch:
               <div class="tw-ml-4" style="color: #388dc0;">
                 <display-datetime :datetime="convertBatchIdToTimestamp(s.purge[0].batch_id)" />
@@ -42,7 +42,7 @@
             <div>Status:</div>
             <div>-</div>
           </div>
-          <div v-if="s.reconcile.length" class="tw-mt-2">
+          <div v-if="s.reconcile && s.reconcile.length" class="tw-mt-2">
             <div>
               Last reconcile batch:
               <div class="tw-ml-4" style="color: #388dc0;">
