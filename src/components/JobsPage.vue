@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>Jobs</h1>
-    <b-table-simple>
+    <b-table-simple small striped hover style="width: auto; min-width: 500px;">
       <thead>
       <tr>
         <th>Source</th>
@@ -10,6 +10,9 @@
       </tr>
       </thead>
       <tbody>
+      <tr v-if="runningJobs.length === 0">
+        <td colspan="3">No jobs running</td>
+      </tr>
       <tr v-for="(job, index) of runningJobs" :key="index">
         <td>{{job.sourceName}}</td>
         <td>{{job.type}}</td>
@@ -19,20 +22,11 @@
       </tr>
       </tbody>
     </b-table-simple>
-    <FetchSources v-slot="{ sources }">
-      <div v-for="source of sources" :key="source.name">
-        <div v-for="type of ['sync', 'purge', 'reconcile']" :key="type">
-          {{source.name}} {{type}} -
-          <b-button @click="startJob(source.name, type)" size="sm">Start job</b-button>
-        </div>
-      </div>
-    </FetchSources>
   </div>
 </template>
 
 <script>
 import gql from 'graphql-tag'
-import FetchSources from './FetchSources'
 
 export default {
   data() {
@@ -55,25 +49,6 @@ export default {
         },
       },
     },
-  },
-  methods: {
-    startJob(sourceName, type) {
-      const job = {
-        sourceName,
-        type,
-      }
-      this.$apollo.mutate({
-        mutation: gql`mutation ($job: JobInput!) {
-					startJob(job: $job)
-				}`,
-        variables: {
-          job,
-        },
-      })
-    },
-  },
-  components: {
-    FetchSources,
   },
 }
 </script>

@@ -27,6 +27,8 @@
         <template v-slot="{ data }">
           <h2 class="tw-mb-4" style="color: #388dbf;">Cron Schedules</h2>
           <CronSchedules :schedules="data.cronSchedules" />
+          <h2 class="tw-mt-4 tw-mb-4" style="color: #388dbf;">Job Runner</h2>
+          <JobRunner :source-name="sourceName" />
         </template>
       </query-loader>
     </div>
@@ -55,7 +57,8 @@ import SyncStats from './SyncStats'
 import PurgeStats from './PurgeStats'
 import ReconcileStats from './ReconcileStats'
 import StatsDetailsContainer from './StatsDetailsContainer'
-import CronSchedules from "@/components/CronSchedules";
+import CronSchedules from './CronSchedules'
+import JobRunner from './JobRunner'
 
 export default {
   props: {
@@ -68,6 +71,7 @@ export default {
     PurgeStats,
     ReconcileStats,
     StatsDetailsContainer,
+    JobRunner,
   },
 }
 </script>
