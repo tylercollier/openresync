@@ -24,6 +24,7 @@ const utils = require('../lib/sync/utils')
 const express = require('express')
 const { createServer } = require('http')
 const { displayStringFormat } = require('../lib/sync/utils/datetime')
+const { areAnyJobsFromSourceRunning }  = require('../lib/sync/utils/jobs')
 
 const dotenv = require('dotenv')
 dotenv.config()
@@ -330,6 +331,10 @@ const resolvers = {
   Mutation: {
     startJob: async (parent, args) => {
       const { sourceName, type } = args.job
+      if (!(await allowJobToRun(sourceName, type))) {
+        const m = `${type} job for ${sourceName} may not run because other jobs for that source are already running`
+        throw new Error(m)
+      }
       let fn = doSync
       if (type === 'purge') {
         fn = doPurge
@@ -353,6 +358,12 @@ const resolvers = {
       },
     },
   },
+}
+
+// This is a rudimentary way of not allowing colliding jobs for now. Eventually we'll want something more robust, most
+// importantly allowing the user to override.
+async function allowJobToRun(sourceName, type) {
+  return !areAnyJobsFromSourceRunning(runningJobs, sourceName)
 }
 
 async function doSync(downloader, destinationManager) {
