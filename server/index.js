@@ -178,6 +178,17 @@ const typeDefs = gql`
     purge: CronSkedj
     reconcile: CronSkedj
   }
+  
+  type Job {
+    sourceName: String!
+    type: String!
+    startedAt: DateTime!
+  }
+
+  input JobInput {
+    sourceName: String!
+    type: String!
+  }
 
   type Query {
     userConfig: UserConfig
@@ -185,9 +196,14 @@ const typeDefs = gql`
     syncStatsDetails(sourceName: String): [StatsDetailsResource!]!
     cronSchedules(sourceName: String): [CronSchedule!]!
   }
+  
+  type Mutation {
+    startJob(job: JobInput!): Void
+  }
 
   type Subscription {
     numRunningJobs: Int!
+    runningJobs: [Job]
   }
 `
 
@@ -311,13 +327,54 @@ const resolvers = {
       return sourceNames.map(getCronSchedule)
     },
   },
+  Mutation: {
+    startJob: async (parent, args) => {
+      const { sourceName, type } = args.job
+      let fn = doSync
+      if (type === 'purge') {
+        fn = doPurge
+      } else if (type === 'reconcile') {
+        fn = doReconcile
+      }
+      const objs = reservedObjsBySource[sourceName]
+      fn = fn.bind(undefined, objs.downloader, objs.destinationManager)
+      jobCountWrapper(sourceName, type, fn)()
+    },
+  },
   Subscription: {
     numRunningJobs: {
       subscribe() {
         return pubsub.asyncIterator(['numRunningJobs'])
       },
     },
+    runningJobs: {
+      subscribe() {
+        return pubsub.asyncIterator(['runningJobs'])
+      },
+    },
   },
+}
+
+async function doSync(downloader, destinationManager) {
+  const metadataString = await downloader.downloadMlsMetadata()
+  const metadata = await utils.parseMetadataString(metadataString)
+  await destinationManager.syncMetadata(metadata)
+
+  await downloader.downloadMlsResources()
+  await destinationManager.resumeSync('sync')
+}
+
+async function doPurge(downloader, destinationManager) {
+  await downloader.downloadPurgeData()
+  await destinationManager.resumePurge()
+}
+
+async function doReconcile(downloader, destinationManager) {
+  const metadataString = await downloader.downloadMlsMetadata()
+  const metadata = await utils.parseMetadataString(metadataString)
+  await downloader.downloadReconcileData()
+  await downloader.downloadMissingData()
+  await destinationManager.resumeSync('missing', metadata)
 }
 
 const server = new ApolloServer({
@@ -369,10 +426,46 @@ async function startServer() {
   })
 }
 
+const jobCountWrapper = (sourceName, type, fn) => {
+  return async () => {
+    try {
+      runningJobsCount++
+      pubsub.publish('numRunningJobs', {
+        numRunningJobs: runningJobsCount,
+      })
+      const m = moment()
+      runningJobs.push({
+        sourceName,
+        type,
+        startedAt: m.toISOString(),
+      })
+      pubsub.publish('runningJobs', {
+        runningJobs,
+      })
+      const dts = m.format(displayStringFormat)
+      console.log(`runningJobsCount`, runningJobsCount, `Starting job ${type} ${sourceName} at ${dts}`)
+      await fn()
+    } finally {
+      runningJobsCount--
+      pubsub.publish('numRunningJobs', {
+        numRunningJobs: runningJobsCount,
+      })
+      const runningJobIndex = runningJobs.findIndex(x => x.sourceName === sourceName && x.type === type)
+      runningJobs.splice(runningJobIndex, 1)
+      pubsub.publish('runningJobs', {
+        runningJobs,
+      })
+      const m = moment().format(displayStringFormat)
+      console.log(`runningJobsCount`, runningJobsCount, `Ended job ${type} ${sourceName} at ${m}`)
+    }
+  }
+}
 
+const runningJobs = []
+const reservedObjsBySource = {}
+let runningJobsCount = 0
 function getCronJobs(internalConfig) {
   const jobs = []
-  let runningJobsCount = 0
   userConfig.sources.forEach(source => {
     const sourceName = source.name
     const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
@@ -396,48 +489,9 @@ function getCronJobs(internalConfig) {
       const downloader = downloaderLib(sourceName, configBundle, eventEmitter, logger)
       const destinationManager = destinationManagerLib(sourceName, configBundle, eventEmitter, logger)
       downloader.setDestinationManager(destinationManager)
-
-      const jobCountWrapper = (name, fn) => {
-        return async () => {
-          try {
-            runningJobsCount++
-            pubsub.publish('numRunningJobs', {
-              numRunningJobs: runningJobsCount,
-            })
-            const m = moment().format(displayStringFormat)
-            console.log(`runningJobsCount`, runningJobsCount, `Starting job ${name} at ${m}`)
-            await fn()
-          } finally {
-            runningJobsCount--
-            pubsub.publish('numRunningJobs', {
-              numRunningJobs: runningJobsCount,
-            })
-            const m = moment().format(displayStringFormat)
-            console.log(`runningJobsCount`, runningJobsCount, `Ended job ${name} at ${m}`)
-          }
-        }
-      }
-
-      async function doSync() {
-        const metadataString = await downloader.downloadMlsMetadata()
-        const metadata = await utils.parseMetadataString(metadataString)
-        await destinationManager.syncMetadata(metadata)
-
-        await downloader.downloadMlsResources()
-        await destinationManager.resumeSync('sync')
-      }
-
-      async function doPurge() {
-        await downloader.downloadPurgeData()
-        await destinationManager.resumePurge()
-      }
-
-      async function doReconcile() {
-        const metadataString = await downloader.downloadMlsMetadata()
-        const metadata = await utils.parseMetadataString(metadataString)
-        await downloader.downloadReconcileData()
-        await downloader.downloadMissingData()
-        await destinationManager.resumeSync('missing', metadata)
+      reservedObjsBySource[sourceName] = {
+        downloader,
+        destinationManager,
       }
 
       const syncCronEnabled = _.get(sourceConfig, 'cron.sync.enabled', true)
@@ -447,7 +501,9 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronTime, jobCountWrapper(`sync ${source.name}`, doSync))
+          const job = new CronJob(cronTime, jobCountWrapper(sourceName, 'sync', () => {
+            doSync(downloader, destinationManager)
+          }))
           jobs.push(job)
           const statsSync = statsSyncLib(db)
           statsSync.listen(eventEmitter)
@@ -460,7 +516,9 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronString, jobCountWrapper(`purge ${source.name}`, doPurge))
+          const job = new CronJob(cronString, jobCountWrapper(sourceName, 'purge', () => {
+            doPurge(downloader, destinationManager)
+          }))
           jobs.push(job)
           const statsPurge = statsPurgeLib(db)
           statsPurge.listen(eventEmitter)
@@ -473,7 +531,9 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronString, jobCountWrapper(`reconcile ${source.name}`, doReconcile))
+          const job = new CronJob(cronString, jobCountWrapper(sourceName, 'reconcile', () => {
+            doReconcile(downloader, destinationManager)
+          }))
           jobs.push(job)
           const statsReconcile = statsReconcileLib(db)
           statsReconcile.listen(eventEmitter)
