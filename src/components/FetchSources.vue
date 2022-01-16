@@ -1,6 +1,6 @@
 <template>
   <div>
-    <QueryLoader
+    <query-loader
       :query="gql => gql`
         query UserConfig {
           userConfig {
@@ -14,19 +14,14 @@
       <template v-slot="{ data }">
         <slot :sources="data.userConfig.sources"></slot>
       </template>
-    </QueryLoader>
+    </query-loader>
   </div>
 </template>
 
 <script>
-import QueryLoader from './QueryLoader'
-
 export default {
   props: {
     sourceName: String,
-  },
-  components: {
-    QueryLoader,
   },
 }
 </script>

@@ -2,7 +2,7 @@
   <div>
     <h1 class="tw-font-bold tw-border-gray-700 tw-border-dotted tw-border-b-2 tw-mb-8">Source: {{sourceName}}</h1>
     <div class="tw-mb-8">
-      <QueryLoader
+      <query-loader
         :query="gql => gql`
         query CronSchedules($sourceName: String) {
           cronSchedules(sourceName: $sourceName) {
@@ -28,7 +28,7 @@
           <h2 class="tw-mb-4" style="color: #388dbf;">Cron Schedules</h2>
           <CronSchedules :schedules="data.cronSchedules" />
         </template>
-      </QueryLoader>
+      </query-loader>
     </div>
     <div class="tw-mb-8">
       <h2 style="color: #388dbf;">Resources</h2>
@@ -55,7 +55,6 @@ import SyncStats from './SyncStats'
 import PurgeStats from './PurgeStats'
 import ReconcileStats from './ReconcileStats'
 import StatsDetailsContainer from './StatsDetailsContainer'
-import QueryLoader from './QueryLoader'
 import CronSchedules from "@/components/CronSchedules";
 
 export default {
@@ -69,7 +68,6 @@ export default {
     PurgeStats,
     ReconcileStats,
     StatsDetailsContainer,
-    QueryLoader,
   },
 }
 </script>

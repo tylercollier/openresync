@@ -4,7 +4,7 @@
     <b-form-group label="Sort by">
       <b-form-radio-group class="mb-4" v-model="orderByName" :options="orderByOptions"/>
     </b-form-group>
-    <QueryLoader
+    <query-loader
       :query="gql => gql`
         query CronSchedules($sourceName: String) {
           cronSchedules(sourceName: $sourceName) {
@@ -97,12 +97,11 @@
           </tbody>
         </b-table-simple>
       </template>
-    </QueryLoader>
+    </query-loader>
   </div>
 </template>
 
 <script>
-import QueryLoader from './QueryLoader'
 import DisplayDatetime from './DisplayDatetime'
 import CronStrings from './CronStrings'
 import orderBy from 'lodash/orderBy'
@@ -155,7 +154,6 @@ export default {
     },
   },
   components: {
-    QueryLoader,
     DisplayDatetime,
     CronStrings,
   },
