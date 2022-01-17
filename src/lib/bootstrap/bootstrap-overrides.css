@@ -2,3 +2,8 @@
 .tooltip-inner {
   max-width: 220px;
 }
+
+/* I think the disabled buttons are too subtlely changed to tell they are disabled. Help show by changing the cursor. */
+.btn.disabled {
+  cursor: not-allowed;
+}

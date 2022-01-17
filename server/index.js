@@ -371,20 +371,26 @@ async function doSync(downloader, destinationManager) {
   const metadata = await utils.parseMetadataString(metadataString)
   await destinationManager.syncMetadata(metadata)
 
-  await downloader.downloadMlsResources()
+  if (await downloader.isDownloadNeeded('sync')) {
+    await downloader.downloadMlsResources()
+  }
   await destinationManager.resumeSync('sync')
 }
 
 async function doPurge(downloader, destinationManager) {
-  await downloader.downloadPurgeData()
+  if (await downloader.isDownloadNeeded('purge')) {
+    await downloader.downloadPurgeData()
+  }
   await destinationManager.resumePurge()
 }
 
 async function doReconcile(downloader, destinationManager) {
+  if (await downloader.isDownloadNeeded('reconcile')) {
+    await downloader.downloadReconcileData()
+    await downloader.downloadMissingData()
+  }
   const metadataString = await downloader.downloadMlsMetadata()
   const metadata = await utils.parseMetadataString(metadataString)
-  await downloader.downloadReconcileData()
-  await downloader.downloadMissingData()
   await destinationManager.resumeSync('missing', metadata)
 }
 
