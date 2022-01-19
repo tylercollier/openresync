@@ -171,6 +171,7 @@ const typeDefs = gql`
   type CronSkedj {
     cronStrings: [String]
     nextDate: DateTime
+    enabled: Boolean
   }
 
   type CronSchedule {
@@ -298,6 +299,7 @@ const resolvers = {
           syncStuff = {
             cronStrings: sourceConfig.cron.sync.cronStrings,
             nextDate: getNextDate(syncCronStrings),
+            enabled: !!_.get(sourceConfig, 'cron.sync.enabled'),
           }
         }
         let purgeStuff = null
@@ -306,6 +308,7 @@ const resolvers = {
           purgeStuff = {
             cronStrings: sourceConfig.cron.purge.cronStrings,
             nextDate: getNextDate(purgeCronStrings),
+            enabled: !!_.get(sourceConfig, 'cron.purge.enabled'),
           }
         }
         let reconcileStuff = null
@@ -314,6 +317,7 @@ const resolvers = {
           reconcileStuff = {
             cronStrings: sourceConfig.cron.reconcile.cronStrings,
             nextDate: getNextDate(reconcileCronStrings),
+            enabled: !!_.get(sourceConfig, 'cron.reconcile.enabled'),
           }
         }
         return {

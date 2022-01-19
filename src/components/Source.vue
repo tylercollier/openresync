@@ -10,14 +10,17 @@
             sync {
               cronStrings
               nextDate
+              enabled
             }
             purge {
               cronStrings
               nextDate
+              enabled
             }
             reconcile {
               cronStrings
               nextDate
+              enabled
             }
           }
         }

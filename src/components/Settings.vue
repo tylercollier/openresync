@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>Settings</h1>
-    <div class="tw-mt-4">Changes are immediately saved</div>
+    <div class="tw-mt-4 tw-text-sm tw-text-gray-400">Changes are immediately saved</div>
     <div class="tw-mt-4 form-check">
       <input class="form-check-input" type="checkbox" v-model="useRelativeTime" id="useRelativeTime" />
       &nbsp;

@@ -12,14 +12,17 @@
             sync {
               cronStrings
               nextDate
+              enabled
             }
             purge {
               cronStrings
               nextDate
+              enabled
             }
             reconcile {
               cronStrings
               nextDate
+              enabled
             }
           }
         }
@@ -32,70 +35,113 @@
             <b-icon icon="arrow-repeat" /> Refresh
           </b-button>
         </div>
-        <b-table-simple v-if="orderByName === 'userConfig'" small striped hover>
-          <thead>
-          <tr>
-            <th>Source name</th>
-            <th>Sync cron schedule</th>
-            <th>Sync next run</th>
-            <th>Purge cron schedule</th>
-            <th>Purge next run</th>
-            <th>Reconcile cron schedule</th>
-            <th>Reconcile next run</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="cronSchedule of data.cronSchedules" :key="cronSchedule.sourceName">
-            <td>{{cronSchedule.sourceName}}</td>
-            <td>
-              <template v-if="cronSchedule.sync">
-                <code class="tw-text-black">
-                  <CronStrings :cron-strings="cronSchedule.sync.cronStrings" />
-                </code>
-              </template>
-            </td>
-            <td><template v-if="cronSchedule.sync"><DisplayDatetime :datetime="cronSchedule.sync.nextDate" /></template></td>
-            <td>
-              <template v-if="cronSchedule.purge">
-                <code class="tw-text-black">
-                  <CronStrings :cron-strings="cronSchedule.purge.cronStrings" />
-                </code>
-              </template>
-            </td>
-            <td><template v-if="cronSchedule.purge"><DisplayDatetime :datetime="cronSchedule.purge.nextDate" /></template></td>
-            <td>
-              <template v-if="cronSchedule.reconcile">
-                <code class="tw-text-black">
-                  <CronStrings :cron-strings="cronSchedule.reconcile.cronStrings" />
-                </code>
-              </template>
-            </td>
-            <td><template v-if="cronSchedule.reconcile"><DisplayDatetime :datetime="cronSchedule.reconcile.nextDate" /></template></td>
-          </tr>
-          </tbody>
-        </b-table-simple>
-        <b-table-simple v-else-if="orderByName === 'datetime'" small striped hover>
-          <thead>
-          <tr>
-            <th>Source name</th>
-            <th>Process</th>
-            <th>Next run</th>
-            <th>Cron Schedule for Type</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(cronSchedule, index) of orderedCronSchedules(data.cronSchedules, orderByName)" :key="index">
-            <td>{{cronSchedule.sourceName}}</td>
-            <td>{{cronSchedule.type}}</td>
-            <td><DisplayDatetime :datetime="cronSchedule.nextDate"/></td>
-            <td>
-              <code class="tw-text-black">
+        <div v-if="orderByName === 'userConfig'">
+          <b-table-simple small striped hover>
+            <thead>
+            <tr>
+              <th>Source name</th>
+              <th>Sync cron schedule</th>
+              <th>Sync next run</th>
+              <th>Purge cron schedule</th>
+              <th>Purge next run</th>
+              <th>Reconcile cron schedule</th>
+              <th>Reconcile next run</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="cronSchedule of data.cronSchedules" :key="cronSchedule.sourceName">
+              <td>{{cronSchedule.sourceName}}</td>
+              <td>
+                <template v-if="cronSchedule.sync">
+                  <CronStrings :cron-strings="cronSchedule.sync.cronStrings" :enabled="cronSchedule.sync.enabled" />
+                </template>
+                <template v-else>
+                  <span class="tw-text-gray-400">N/A</span>
+                </template>
+              </td>
+              <td>
+                <template v-if="cronSchedule.sync">
+                  <DisplayDatetime
+                    :datetime="cronSchedule.sync.nextDate"
+                    :class="{ 'tw-text-gray-400': !cronSchedule.sync.enabled }"
+                  />
+                </template>
+                <template v-else>
+                  <span class="tw-text-gray-400">N/A</span>
+                </template>
+              </td>
+              <td>
+                <template v-if="cronSchedule.purge">
+                  <CronStrings :cron-strings="cronSchedule.purge.cronStrings" :enabled="cronSchedule.purge.enabled" />
+                </template>
+                <template v-else>
+                  <span class="tw-text-gray-400">N/A</span>
+                </template>
+              </td>
+              <td>
+                <template v-if="cronSchedule.purge">
+                  <DisplayDatetime
+                    :datetime="cronSchedule.purge.nextDate"
+                    :class="{ 'tw-text-gray-400': !cronSchedule.purge.enabled }"
+                  />
+                </template>
+                <template v-else>
+                  <span class="tw-text-gray-400">N/A</span>
+                </template>
+              </td>
+              <td>
+                <template v-if="cronSchedule.reconcile">
+                  <CronStrings :cron-strings="cronSchedule.reconcile.cronStrings" :enabled="cronSchedule.reconcile.enabled" />
+                </template>
+                <template v-else>
+                  <span class="tw-text-gray-400">N/A</span>
+                </template>
+              </td>
+              <td>
+                <template v-if="cronSchedule.reconcile">
+                  <DisplayDatetime
+                    :datetime="cronSchedule.reconcile.nextDate"
+                    :class="{ 'tw-text-gray-400': !cronSchedule.reconcile.enabled }"
+                  />
+                </template>
+                <template v-else>
+                  <span class="tw-text-gray-400">N/A</span>
+                </template>
+              </td>
+            </tr>
+            </tbody>
+          </b-table-simple>
+        </div>
+        <div v-else-if="orderByName === 'datetime'">
+          <b-table-simple small striped hover>
+            <thead>
+            <tr>
+              <th>Source name</th>
+              <th>Process</th>
+              <th>Next run</th>
+              <th>Cron Schedule for Type</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(cronSchedule, index) of orderedCronSchedules(data.cronSchedules, orderByName)"
+                :key="index"
+                :class="{ 'tw-opacity-50': !cronSchedule.enabled }"
+            >
+              <td>{{ cronSchedule.sourceName }}</td>
+              <td>{{ cronSchedule.type }}</td>
+              <td>
+                <DisplayDatetime :datetime="cronSchedule.nextDate" />
+              </td>
+              <td>
                 <CronStrings :cron-strings="cronSchedule.cronStrings" />
-              </code>
-            </td>
-          </tr>
-          </tbody>
-        </b-table-simple>
+              </td>
+            </tr>
+            </tbody>
+          </b-table-simple>
+        </div>
+        <div class="tw-text-sm tw-text-gray-400">
+          Disabled cron jobs show as grey
+        </div>
       </template>
     </query-loader>
   </div>
@@ -142,6 +188,7 @@ export default {
                 type,
                 nextDate: schedule[type].nextDate,
                 cronStrings: schedule[type].cronStrings,
+                enabled: schedule[type].enabled,
               })
             }
           }
