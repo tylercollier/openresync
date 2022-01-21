@@ -205,7 +205,6 @@ const typeDefs = gql`
   }
 
   type Subscription {
-    numRunningJobs: Int!
     runningJobs: [Job!]!
   }
 `
@@ -355,11 +354,6 @@ const resolvers = {
     },
   },
   Subscription: {
-    numRunningJobs: {
-      subscribe() {
-        return pubsub.asyncIterator(['numRunningJobs'])
-      },
-    },
     runningJobs: {
       subscribe() {
         return pubsub.asyncIterator(['runningJobs'])
@@ -454,10 +448,6 @@ async function startServer() {
 const jobCountWrapper = (sourceName, type, fn) => {
   return async () => {
     try {
-      runningJobsCount++
-      pubsub.publish('numRunningJobs', {
-        numRunningJobs: runningJobsCount,
-      })
       const m = moment()
       runningJobs.push({
         sourceName,
@@ -468,27 +458,22 @@ const jobCountWrapper = (sourceName, type, fn) => {
         runningJobs,
       })
       const dts = m.format(displayStringFormat)
-      console.log(`runningJobsCount`, runningJobsCount, `Starting job ${type} ${sourceName} at ${dts}`)
+      console.log('Running jobs', runningJobs.length, `Starting job ${type} ${sourceName} at ${dts}`)
       await fn()
     } finally {
-      runningJobsCount--
-      pubsub.publish('numRunningJobs', {
-        numRunningJobs: runningJobsCount,
-      })
       const runningJobIndex = runningJobs.findIndex(x => x.sourceName === sourceName && x.type === type)
       runningJobs.splice(runningJobIndex, 1)
       pubsub.publish('runningJobs', {
         runningJobs,
       })
       const m = moment().format(displayStringFormat)
-      console.log(`runningJobsCount`, runningJobsCount, `Ended job ${type} ${sourceName} at ${m}`)
+      console.log('Running jobs', runningJobs.length, `Ended job ${type} ${sourceName} at ${m}`)
     }
   }
 }
 
 const runningJobs = []
 const reservedObjsBySource = {}
-let runningJobsCount = 0
 function getCronJobs(internalConfig) {
   const jobs = []
   userConfig.sources.forEach(source => {

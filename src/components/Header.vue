@@ -35,12 +35,14 @@ export default {
   },
   apollo: {
     $subscribe: {
-      numRunningJobs: {
+      runningJobs: {
         query: gql`subscription {
-          numRunningJobs
+          runningJobs {
+            sourceName
+          }
         }`,
         result({ data }) {
-          this.countOfRunningJobs = data.numRunningJobs
+          this.countOfRunningJobs = data.runningJobs.length
         },
       },
     },
