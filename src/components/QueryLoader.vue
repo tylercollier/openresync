@@ -7,10 +7,13 @@
   -->
   <ApolloQuery ref="theQuery" v-bind="$attrs" fetch-policy="no-cache" notifyOnNetworkStatusChange tag="span">
     <template v-slot="{ result: { loading, error, data } }">
-      <div v-if="loading">Loading...</div>
-      <div v-else-if="error" class="error">An error occurred</div>
+      <slot name="loading" v-if="loading">
+        <b-spinner small></b-spinner>
+      </slot>
+      <slot name="error" v-else-if="error">
+        <span class="error">An error occurred</span>
+      </slot>
       <slot v-else-if="data" v-bind="{ data, refresh }">data: {{data}}</slot>
-      <div v-else></div>
     </template>
   </ApolloQuery>
 </template>
