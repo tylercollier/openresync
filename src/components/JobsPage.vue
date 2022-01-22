@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <FetchSubscribeRunningJobs v-slot="{ runningJobs }">
     <h1>Jobs</h1>
     <b-table-simple small striped hover style="width: auto; min-width: 500px;">
       <thead>
@@ -22,33 +22,15 @@
       </tr>
       </tbody>
     </b-table-simple>
-  </div>
+  </FetchSubscribeRunningJobs>
 </template>
 
 <script>
-import gql from 'graphql-tag'
+import FetchSubscribeRunningJobs from './FetchSubscribeRunningJobs'
 
 export default {
-  data() {
-    return {
-      runningJobs: [],
-    }
-  },
-  apollo: {
-    $subscribe: {
-      runningJobs: {
-        query: gql`subscription {
-          runningJobs {
-            sourceName
-            type
-            startedAt
-          }
-        }`,
-        result({ data }) {
-          this.runningJobs = data.runningJobs
-        },
-      },
-    },
+  components: {
+    FetchSubscribeRunningJobs,
   },
 }
 </script>

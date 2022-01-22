@@ -197,6 +197,7 @@ const typeDefs = gql`
     syncStats(sourceName: String): SyncStats!
     syncStatsDetails(sourceName: String): [StatsDetailsResource!]!
     cronSchedules(sourceName: String): [CronSchedule!]!
+    runningJobs: [Job!]!
   }
   
   type Mutation {
@@ -205,7 +206,7 @@ const typeDefs = gql`
 
   type Subscription {
     numRunningJobs: Int!
-    runningJobs: [Job]
+    runningJobs: [Job!]!
   }
 `
 
@@ -330,6 +331,9 @@ const resolvers = {
 
       const sourceNames = args.sourceName ? [args.sourceName] : userConfig.sources.map(x => x.name)
       return sourceNames.map(getCronSchedule)
+    },
+    runningJobs: async (parent, args) => {
+      return runningJobs
     },
   },
   Mutation: {

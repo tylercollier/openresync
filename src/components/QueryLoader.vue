@@ -5,13 +5,11 @@
     Use notifyOneNetworkStatusChange so that 'loading' state still works when using fetch-policy="no-cache".
     See: https://github.com/vuejs/vue-apollo/issues/263#issuecomment-488686655
   -->
-  <ApolloQuery ref="theQuery" v-bind="$attrs" fetch-policy="no-cache" notifyOnNetworkStatusChange>
+  <ApolloQuery ref="theQuery" v-bind="$attrs" fetch-policy="no-cache" notifyOnNetworkStatusChange tag="span">
     <template v-slot="{ result: { loading, error, data } }">
       <div v-if="loading">Loading...</div>
       <div v-else-if="error" class="error">An error occurred</div>
-      <div v-else-if="data">
-        <slot v-bind="{ data, refresh }">data: {{data}}</slot>
-      </div>
+      <slot v-else-if="data" v-bind="{ data, refresh }">data: {{data}}</slot>
       <div v-else></div>
     </template>
   </ApolloQuery>
