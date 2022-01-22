@@ -16,8 +16,8 @@
     `"
     :variables="{ sourceName }"
   >
-    <template v-slot="{ data }">
-      <StatsDetails :stats="data.syncStatsDetails" />
+    <template v-slot="{ data, refresh }">
+      <StatsDetails :stats="data.syncStatsDetails" @refresh="refresh" />
     </template>
   </query-loader>
 </template>

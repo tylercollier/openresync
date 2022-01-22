@@ -1,7 +1,15 @@
 <template>
   <div>
     <div v-for="resource of stats" :key="resource.name">
-      <h3>{{resource.name}}</h3>
+      <div class="tw-flex tw-justify-between">
+        <h3>{{ resource.name }}</h3>
+        <div>
+          <b-button size="sm" variant="outline-success" @click="$emit('refresh')">
+            <b-icon icon="arrow-repeat"/>
+            Refresh
+          </b-button>
+        </div>
+      </div>
       <b-table-simple small striped hover>
         <thead>
         <tr>
