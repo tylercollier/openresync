@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!jobsProvider.loading">
+  <jobs-consumer>
     <div class="tw-flex">
       <div>
         <b-button :disabled="isDisabled" @click="startJob('sync')" size="sm" variant="outline-primary">
@@ -26,7 +26,7 @@
     <div v-if="isDisabled" class="tw-text-gray-400 tw-mt-2 tw-gray-400">
       Starting a job is disabled while another job for the same source is running
     </div>
-  </div>
+  </jobs-consumer>
 </template>
 
 <script>
