@@ -3,7 +3,7 @@
     <h1 class="tw-font-bold tw-py-2">Openresync</h1>
     <div class="tw-flex tw-mr-8 tw-font-bold">
       <router-link class="tw-mr-8 tw-text-white" :style="styles('/jobs')" to="/jobs">
-        Jobs (<FetchSubscribeRunningJobs v-slot="{ runningJobs }">{{runningJobs.length}}</FetchSubscribeRunningJobs>)
+        Jobs (<span v-if="jobsProvider.loading"><b-spinner small /></span><span v-else-if="jobsProvider.error">?</span><span v-else>{{jobsProvider.jobs.length}}</span>)
       </router-link>
       <router-link class="tw-mr-8 tw-text-white" :style="styles('/dashboard')" to="/dashboard">
         Dashboard
@@ -20,32 +20,12 @@
 </template>
 
 <script>
-import gql from 'graphql-tag'
-import FetchSubscribeRunningJobs from './FetchSubscribeRunningJobs'
 
 export default {
+  inject: ['jobsProvider'],
   props: {
     sources: Array,
     sourceName: String,
-  },
-  data() {
-    return {
-      countOfRunningJobs: 0,
-    }
-  },
-  apollo: {
-    $subscribe: {
-      runningJobs: {
-        query: gql`subscription {
-          runningJobs {
-            sourceName
-          }
-        }`,
-        result({ data }) {
-          this.countOfRunningJobs = data.runningJobs.length
-        },
-      },
-    },
   },
   methods: {
     goToSource(value) {
@@ -64,9 +44,6 @@ export default {
     selectedSource() {
       return this.sources.find(x => x.name === this.sourceName)
     },
-  },
-  components: {
-    FetchSubscribeRunningJobs,
   },
 }
 </script>

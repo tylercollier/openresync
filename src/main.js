@@ -9,6 +9,7 @@ import { split } from 'apollo-link'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
 import { merge } from 'lodash'
+import ReactiveProvide from 'vue-reactive-provide'
 import router from './routes'
 import settings from './settings'
 import './components/index'
@@ -57,6 +58,7 @@ const apolloProvider = new VueApollo({
 })
 
 Vue.use(VueRouter)
+Vue.use(ReactiveProvide);
 
 Vue.config.productionTip = false
 
