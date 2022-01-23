@@ -503,6 +503,12 @@ function getCronJobs(internalConfig) {
         downloader,
         destinationManager,
       }
+      const statsSync = statsSyncLib(db)
+      statsSync.listen(eventEmitter)
+      const statsPurge = statsPurgeLib(db)
+      statsPurge.listen(eventEmitter)
+      const statsReconcile = statsReconcileLib(db)
+      statsReconcile.listen(eventEmitter)
 
       const syncCronEnabled = _.get(sourceConfig, 'cron.sync.enabled', true)
       if (syncCronEnabled && syncCronStrings.length) {
@@ -515,8 +521,6 @@ function getCronJobs(internalConfig) {
             doSync(downloader, destinationManager)
           }))
           jobs.push(job)
-          const statsSync = statsSyncLib(db)
-          statsSync.listen(eventEmitter)
         }
       }
       const purgeCronEnabled = _.get(sourceConfig, 'cron.purge.enabled', true)
@@ -530,8 +534,6 @@ function getCronJobs(internalConfig) {
             doPurge(downloader, destinationManager)
           }))
           jobs.push(job)
-          const statsPurge = statsPurgeLib(db)
-          statsPurge.listen(eventEmitter)
         }
       }
       const reconcileCronEnabled = _.get(sourceConfig, 'cron.reconcile.enabled', true)
@@ -545,8 +547,6 @@ function getCronJobs(internalConfig) {
             doReconcile(downloader, destinationManager)
           }))
           jobs.push(job)
-          const statsReconcile = statsReconcileLib(db)
-          statsReconcile.listen(eventEmitter)
         }
       }
 
