@@ -53,8 +53,15 @@
 
 <script>
 export default {
+  inject: ['jobsProvider'],
   props: {
+    sourceName: String,
     stats: Array,
+  },
+  data() {
+    return {
+      jobsCountForSource: 0,
+    }
   },
   methods: {
     numRecordsInMls(num) {
@@ -69,6 +76,21 @@ export default {
       }
       return `Too many by ${destinationNumRecords - numRecordsInMls}`
     },
-  }
+  },
+  watch: {
+    jobsProvider: {
+      deep: true,
+      handler(newValue, /* oldValue */) {
+        // Let's keep this simple. If a job ended, refresh the stats.
+        // Hmm. I tried comparing newValue and oldValue, and they were always the same. So we keep track of the value in
+        // our own state.
+        const newJobsCountForSource = newValue.runningJobs.filter(x => x.sourceName === this.sourceName).length
+        if (newJobsCountForSource < this.jobsCountForSource) {
+          this.$emit('refresh')
+        }
+        this.jobsCountForSource = newJobsCountForSource
+      },
+    },
+  },
 }
 </script>

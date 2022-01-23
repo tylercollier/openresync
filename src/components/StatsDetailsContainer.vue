@@ -17,7 +17,7 @@
     :variables="{ sourceName }"
   >
     <template v-slot="{ data, refresh }">
-      <StatsDetails :stats="data.syncStatsDetails" @refresh="refresh" />
+      <StatsDetails :stats="data.syncStatsDetails" @refresh="refresh" :source-name="sourceName" />
     </template>
   </query-loader>
 </template>
@@ -27,10 +27,7 @@ import StatsDetails from './StatsDetails'
 
 export default {
   props: {
-    sourceName: {
-      type: String,
-      required: false,
-    },
+    sourceName: String,
   },
   components: {
     StatsDetails,
