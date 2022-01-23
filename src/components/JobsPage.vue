@@ -1,5 +1,5 @@
 <template>
-  <FetchSubscribeRunningJobs v-slot="{ runningJobs }">
+  <div v-if="!jobsProvider.loading">
     <h1>Jobs</h1>
     <b-table-simple small striped hover style="width: auto; min-width: 500px;">
       <thead>
@@ -10,10 +10,10 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-if="runningJobs.length === 0">
+      <tr v-if="jobsProvider.runningJobs.length === 0">
         <td colspan="3">No jobs running</td>
       </tr>
-      <tr v-for="(job, index) of runningJobs" :key="index">
+      <tr v-for="(job, index) of jobsProvider.runningJobs" :key="index">
         <td>{{job.sourceName}}</td>
         <td>{{job.type}}</td>
         <td>
@@ -22,15 +22,11 @@
       </tr>
       </tbody>
     </b-table-simple>
-  </FetchSubscribeRunningJobs>
+  </div>
 </template>
 
 <script>
-import FetchSubscribeRunningJobs from './FetchSubscribeRunningJobs'
-
 export default {
-  components: {
-    FetchSubscribeRunningJobs,
-  },
+  inject: ['jobsProvider'],
 }
 </script>

@@ -1,40 +1,40 @@
 <template>
-  <FetchSubscribeRunningJobs v-slot="{ runningJobs }">
+  <div v-if="!jobsProvider.loading">
     <div class="tw-flex">
       <div>
-        <b-button :disabled="isDisabled(runningJobs)" @click="startJob('sync')" size="sm" variant="outline-primary">
+        <b-button :disabled="isDisabled" @click="startJob('sync')" size="sm" variant="outline-primary">
           Sync
           <b-spinner v-if="sync.running" small/>
           <b-icon v-else icon="arrow-right"/>
         </b-button>
       </div>
       <div class="tw-ml-4">
-        <b-button :disabled="isDisabled(runningJobs)" @click="startJob('purge')" size="sm" variant="outline-primary">
+        <b-button :disabled="isDisabled" @click="startJob('purge')" size="sm" variant="outline-primary">
           Purge
           <b-spinner v-if="purge.running" small/>
           <b-icon v-else icon="arrow-right"/>
         </b-button>
       </div>
       <div class="tw-ml-4">
-        <b-button :disabled="isDisabled(runningJobs)" @click="startJob('reconcile')" size="sm" variant="outline-primary">
+        <b-button :disabled="isDisabled" @click="startJob('reconcile')" size="sm" variant="outline-primary">
           Reconcile
           <b-spinner v-if="reconcile.running" small/>
           <b-icon v-else icon="arrow-right"/>
         </b-button>
       </div>
     </div>
-    <div v-if="isDisabled(runningJobs)" class="tw-text-gray-400 tw-mt-2 tw-gray-400">
+    <div v-if="isDisabled" class="tw-text-gray-400 tw-mt-2 tw-gray-400">
       Starting a job is disabled while another job for the same source is running
     </div>
-  </FetchSubscribeRunningJobs>
+  </div>
 </template>
 
 <script>
 import gql from 'graphql-tag'
 import { areAnyJobsFromSourceRunning } from '../../lib/sync/utils/jobs'
-import FetchSubscribeRunningJobs from './FetchSubscribeRunningJobs'
 
 export default {
+  inject: ['jobsProvider'],
   props: {
     sourceName: String,
   },
@@ -80,14 +80,13 @@ export default {
         this[type].running = false
       })
     },
-    isDisabled(runningJobs) {
+  },
+  computed: {
+    isDisabled() {
       // This is a rudimentary way of not allowing colliding jobs for now. Eventually we'll want something more robust,
       // most importantly allowing the user to override.
-      return areAnyJobsFromSourceRunning(runningJobs, this.sourceName)
+      return areAnyJobsFromSourceRunning(this.jobsProvider.runningJobs, this.sourceName)
     },
-  },
-  components: {
-    FetchSubscribeRunningJobs,
   },
 }
 </script>

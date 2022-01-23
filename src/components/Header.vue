@@ -3,7 +3,7 @@
     <h1 class="tw-font-bold tw-py-2">Openresync</h1>
     <div class="tw-flex tw-mr-8 tw-font-bold">
       <router-link class="tw-mr-8 tw-text-white" :style="styles('/jobs')" to="/jobs">
-        Jobs (<span v-if="jobsProvider.loading"><b-spinner small /></span><span v-else-if="jobsProvider.error">?</span><span v-else>{{jobsProvider.jobs.length}}</span>)
+        Jobs (<span v-if="jobsProvider.loading"><b-spinner small /></span><span v-else-if="jobsProvider.error">?</span><span v-else>{{jobsProvider.runningJobs.length}}</span>)
       </router-link>
       <router-link class="tw-mr-8 tw-text-white" :style="styles('/dashboard')" to="/dashboard">
         Dashboard

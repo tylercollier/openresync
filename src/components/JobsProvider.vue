@@ -23,7 +23,7 @@ export default {
   },
   reactiveProvide: {
     name: 'jobsProvider',
-    include: ['loading', 'error', 'jobs']
+    include: ['loading', 'error', 'runningJobs']
   },
   apollo: {
     fetchJobs: {
@@ -60,7 +60,7 @@ export default {
       }
       return this.$apollo.queries.fetchJobs.loading
     },
-    jobs() {
+    runningJobs() {
       return this.subscribeJobs || this.fetchJobs
     },
   },
