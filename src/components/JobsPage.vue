@@ -15,7 +15,8 @@
           <td colspan="3">No jobs running</td>
         </tr>
         <tr v-for="(job, index) of runningJobs" :key="index">
-          <td>{{job.sourceName}}</td>
+          <td>
+            <router-link :to="`/sources/${job.sourceName}`" style="color: #388dc0;">{{job.sourceName}}</router-link>
           <td>{{job.type}}</td>
           <td>
             <display-datetime :datetime="job.startedAt" />
