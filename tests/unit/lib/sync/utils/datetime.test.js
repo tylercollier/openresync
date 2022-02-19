@@ -56,7 +56,6 @@ describe('datetime', () => {
       test('1y1d2h', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2021-01-02T02:00:00Z')
-        // expect(oldTime.from(newTime)).toEqual(5)
         const milliseconds = datetimeLib.getMillisecondsUntilRelativeTimeChange(oldTime, newTime)
         expect(milliseconds).toEqual(1000 * 60 * 60 * 10)
       })

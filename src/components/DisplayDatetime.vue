@@ -8,7 +8,8 @@
 </template>
 
 <script>
-import { getDisplayDatetime } from '../../lib/sync/utils/datetime'
+import { getDisplayDatetime, getMillisecondsUntilRelativeTimeChange } from '../../lib/sync/utils/datetime'
+import moment from 'moment'
 
 export default {
   props: {
@@ -21,7 +22,27 @@ export default {
     },
     getOtherDisplayDatetime(datetime) {
       return getDisplayDatetime(datetime, !this.$globals.useRelativeTime)
-    }
+    },
+    setTimeoutForDisplay() {
+      if (this.$globals.useRelativeTime) {
+        this.$forceUpdate()
+
+        // Ensure a moment
+        const m = moment.utc(this.datetime)
+        const milliseconds = getMillisecondsUntilRelativeTimeChange(m, moment.utc())
+        setTimeout(this.setTimeoutForDisplay, milliseconds)
+      }
+    },
+  },
+  mounted() {
+    this.setTimeoutForDisplay()
+  },
+  watch: {
+    '$globals.useRelativeTime'(newValue) {
+      if (newValue) {
+        this.setTimeoutForDisplay()
+      }
+    },
   },
 }
 </script>
