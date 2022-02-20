@@ -8,9 +8,12 @@
 </template>
 
 <script>
-import { getDisplayDatetime, getMillisecondsUntilUpcomingRelativeTimeChange } from '../../lib/sync/utils/datetime'
+import {
+  getDisplayDatetime,
+  getMillisecondsUntilUpcomingRelativeTimeChange,
+  getNextDateFromCronStrings,
+} from '../../lib/sync/utils/datetime'
 import moment from 'moment'
-import { CronJob } from 'cron'
 
 export default {
   props: {
@@ -31,20 +34,11 @@ export default {
       return getDisplayDatetime(datetime, !this.$globals.useRelativeTime)
     },
     setTimeoutForDisplay() {
-      if (this.$globals.useRelativeTime
-        // && this.cronSchedule.sourceName === 'recolorado_res'
-        // && this.cronSchedule.type === 'sync'
-      ) {
-        console.log(this.cronSchedule.sourceName + ' ' + this.cronSchedule.type + ' in setTimeoutForDisplay')
-        const cronJob = new CronJob(this.cronSchedule.cronStrings[0], () => {})
-        const nextDate = cronJob.nextDate()
-        console.log(this.cronSchedule.sourceName + ' ' + this.cronSchedule.type + ' nextDate', nextDate.toISOString())
+      if (this.$globals.useRelativeTime) {
+        const nextDate = getNextDateFromCronStrings(this.cronSchedule.cronStrings)
         this.datetime = nextDate
 
-        // Add 100 milliseconds just to make sure it doesn't trigger too early and the text doesn't update
-        const milliseconds = 100 + getMillisecondsUntilUpcomingRelativeTimeChange(moment.utc(), nextDate)
-        console.log(this.cronSchedule.sourceName + ' ' + this.cronSchedule.type + ' It is currently: ' + moment.utc().toISOString())
-        console.log(this.cronSchedule.sourceName + ' ' + this.cronSchedule.type + ' milliseconds', milliseconds)
+        const milliseconds = getMillisecondsUntilUpcomingRelativeTimeChange(moment.utc(), nextDate)
         this.timeoutId = setTimeout(this.setTimeoutForDisplay, milliseconds)
       }
     },

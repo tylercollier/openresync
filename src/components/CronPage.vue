@@ -36,108 +36,10 @@
           </b-button>
         </div>
         <div v-if="orderByName === 'userConfig'">
-          <b-table-simple small striped hover>
-            <thead>
-            <tr>
-              <th>Source name</th>
-              <th>Sync cron schedule</th>
-              <th>Sync next run</th>
-              <th>Purge cron schedule</th>
-              <th>Purge next run</th>
-              <th>Reconcile cron schedule</th>
-              <th>Reconcile next run</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="cronSchedule of data.cronSchedules" :key="cronSchedule.sourceName">
-              <td>{{cronSchedule.sourceName}}</td>
-              <td>
-                <template v-if="cronSchedule.sync">
-                  <CronStrings :cron-strings="cronSchedule.sync.cronStrings" :enabled="cronSchedule.sync.enabled" />
-                </template>
-                <template v-else>
-                  <span class="tw-text-gray-400">N/A</span>
-                </template>
-              </td>
-              <td>
-                <template v-if="cronSchedule.sync">
-                  <DisplayDatetime
-                    :datetime="cronSchedule.sync.nextDate"
-                    :class="{ 'tw-text-gray-400': !cronSchedule.sync.enabled }"
-                  />
-                </template>
-                <template v-else>
-                  <span class="tw-text-gray-400">N/A</span>
-                </template>
-              </td>
-              <td>
-                <template v-if="cronSchedule.purge">
-                  <CronStrings :cron-strings="cronSchedule.purge.cronStrings" :enabled="cronSchedule.purge.enabled" />
-                </template>
-                <template v-else>
-                  <span class="tw-text-gray-400">N/A</span>
-                </template>
-              </td>
-              <td>
-                <template v-if="cronSchedule.purge">
-                  <DisplayDatetime
-                    :datetime="cronSchedule.purge.nextDate"
-                    :class="{ 'tw-text-gray-400': !cronSchedule.purge.enabled }"
-                  />
-                </template>
-                <template v-else>
-                  <span class="tw-text-gray-400">N/A</span>
-                </template>
-              </td>
-              <td>
-                <template v-if="cronSchedule.reconcile">
-                  <CronStrings :cron-strings="cronSchedule.reconcile.cronStrings" :enabled="cronSchedule.reconcile.enabled" />
-                </template>
-                <template v-else>
-                  <span class="tw-text-gray-400">N/A</span>
-                </template>
-              </td>
-              <td>
-                <template v-if="cronSchedule.reconcile">
-                  <DisplayDatetime
-                    :datetime="cronSchedule.reconcile.nextDate"
-                    :class="{ 'tw-text-gray-400': !cronSchedule.reconcile.enabled }"
-                  />
-                </template>
-                <template v-else>
-                  <span class="tw-text-gray-400">N/A</span>
-                </template>
-              </td>
-            </tr>
-            </tbody>
-          </b-table-simple>
+          <CronSchedulesUserConfig :cron-schedules="data.cronSchedules" />
         </div>
         <div v-else-if="orderByName === 'datetime'">
-          <b-table-simple small striped hover>
-            <thead>
-            <tr>
-              <th>Source name</th>
-              <th>Process</th>
-              <th>Next run</th>
-              <th>Cron Schedule for Type</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="(cronSchedule, index) of orderedCronSchedules(data.cronSchedules, orderByName)"
-                :key="index"
-                :class="{ 'tw-opacity-50': !cronSchedule.enabled }"
-            >
-              <td>{{ cronSchedule.sourceName }}</td>
-              <td>{{ cronSchedule.type }}</td>
-              <td>
-                <DisplayDatetimeCron :cron-schedule="cronSchedule" />
-              </td>
-              <td>
-                <CronStrings :cron-strings="cronSchedule.cronStrings" />
-              </td>
-            </tr>
-            </tbody>
-          </b-table-simple>
+          <CronSchedulesNextRun :cron-schedules="data.cronSchedules" />
         </div>
         <div class="tw-text-sm tw-text-gray-400">
           Disabled cron jobs show as grey
@@ -148,14 +50,9 @@
 </template>
 
 <script>
-import DisplayDatetime from './DisplayDatetime'
-import DisplayDatetimeCron from './DisplayDatetimeCron'
-import CronStrings from './CronStrings'
-import orderBy from 'lodash/orderBy'
+import CronSchedulesNextRun from './CronSchedulesNextRun'
+import CronSchedulesUserConfig from './CronSchedulesUserConfig'
 import { makeGlobalSettings } from '../lib/utils/index'
-import {CronJob} from "cron";
-import {getMillisecondsUntilUpcomingRelativeTimeChange} from "../../lib/sync/utils/datetime";
-import moment from "moment";
 
 const orderByOptions = [
   { text: 'Sources listed in user config', value: 'userConfig' },
@@ -172,7 +69,6 @@ export default {
   data() {
     return {
       orderByOptions,
-      timeoutIds: [],
     }
   },
   computed: {
@@ -180,48 +76,9 @@ export default {
       orderByName: 'cronPage.orderByName',
     }),
   },
-  methods: {
-    orderedCronSchedules(schedules, orderByName) {
-      if (orderByName === 'datetime') {
-        const a = []
-        for (const schedule of schedules) {
-          for (let type of ['sync', 'purge', 'reconcile']) {
-            if (schedule[type]) {
-              a.push({
-                sourceName: schedule.sourceName,
-                type,
-                nextDate: schedule[type].nextDate,
-                cronStrings: schedule[type].cronStrings,
-                enabled: schedule[type].enabled,
-              })
-            }
-          }
-        }
-        const ordered = orderBy(a, ['nextDate'], ['asc'])
-        return ordered
-      } else {
-        return schedules
-      }
-    },
-  },
-  mount() {
-    const ordered = this.orderedCronSchedules()
-    for (let cronSchedule of ordered) {
-      const cronJob = new CronJob(cronSchedule.cronStrings[0], () => {})
-      const nextDate = cronJob.nextDate()
-      const milliseconds = 100 + getMillisecondsUntilUpcomingRelativeTimeChange(moment.utc(), nextDate)
-      this.timeoutIds.push(setTimeout(() => this.$forceUpdate(), milliseconds))
-    }
-  },
-  beforeDestroy() {
-    for (const timeoutId of this.timeoutIds) {
-      clearTimeout(timeoutId)
-    }
-  },
   components: {
-    DisplayDatetime,
-    DisplayDatetimeCron,
-    CronStrings,
+    CronSchedulesNextRun,
+    CronSchedulesUserConfig,
   },
 }
 </script>

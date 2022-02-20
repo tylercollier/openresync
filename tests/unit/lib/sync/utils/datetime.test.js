@@ -3,16 +3,16 @@ const moment = require('moment')
 
 describe('datetime', () => {
   describe('getMillisecondsUntilRelativeTimeChange', () => {
-    describe('[0, 45s)', () => {
+    describe('[0, 44.5s)', () => {
       test('20s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:00:20Z')
         const milliseconds = datetimeLib.getMillisecondsUntilRelativeTimeChange(oldTime, newTime)
-        expect(milliseconds).toEqual(1000 * 25)
+        expect(milliseconds).toEqual(1000 * 24.5)
       })
     })
 
-    describe('[45s, 45m)', () => {
+    describe('[44.5s, 45m)', () => {
       test('50s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:00:50Z')
@@ -63,7 +63,7 @@ describe('datetime', () => {
   })
 
   describe('getMillisecondsUntilUpcomingRelativeTimeChange', () => {
-    describe('(-45s, 0s]', () => {
+    describe('(-44.5s, 0s]', () => {
       test('20s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:00:20Z')
@@ -72,26 +72,26 @@ describe('datetime', () => {
       })
     })
 
-    describe('(-1m30s, -45s]', () => {
+    describe('(-1m30s, -44.5s]', () => {
       test('50s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:00:50Z')
         const milliseconds = datetimeLib.getMillisecondsUntilUpcomingRelativeTimeChange(oldTime, newTime)
-        expect(milliseconds).toEqual(1000 * 5)
+        expect(milliseconds).toEqual(1000 * 5.5)
       })
 
       test('55s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:00:55Z')
         const milliseconds = datetimeLib.getMillisecondsUntilUpcomingRelativeTimeChange(oldTime, newTime)
-        expect(milliseconds).toEqual(1000 * 10)
+        expect(milliseconds).toEqual(1000 * 10.5)
       })
 
       test('1m20s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:01:20Z')
         const milliseconds = datetimeLib.getMillisecondsUntilUpcomingRelativeTimeChange(oldTime, newTime)
-        expect(milliseconds).toEqual(1000 * 35)
+        expect(milliseconds).toEqual(1000 * 35.5)
       })
     })
 

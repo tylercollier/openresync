@@ -14,7 +14,7 @@ const destinationManagerLib = require('../lib/sync/destinationManager')
 const downloaderLib = require('../lib/sync/downloader')
 const EventEmitter = require('events')
 const pino = require('pino')
-const CronJob = require('cron').CronJob
+const { CronJob, sendAt } = require('cron')
 const pathLib = require('path')
 const moment = require('moment')
 const statsSyncLib = require('../lib/stats/sync')
@@ -23,7 +23,7 @@ const statsReconcileLib = require('../lib/stats/reconcile')
 const utils = require('../lib/sync/utils')
 const express = require('express')
 const { createServer } = require('http')
-const { displayStringFormat } = require('../lib/sync/utils/datetime')
+const { displayStringFormat, getNextDateFromCronStrings } = require('../lib/sync/utils/datetime')
 const { areAnyJobsFromSourceRunning }  = require('../lib/sync/utils/jobs')
 
 const dotenv = require('dotenv')
@@ -286,11 +286,6 @@ const resolvers = {
       return data
     },
     cronSchedules: async (parent, args) => {
-      function getNextDate(cronStrings) {
-        const cronJobs = cronStrings.map(x => new CronJob(x, () => {}))
-        const orderedJobs = _.orderBy(cronJobs, x => x.nextDate())
-        return orderedJobs[0].nextDate().toISOString()
-      }
       function getCronSchedule(sourceName) {
         const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
         let syncStuff = null
@@ -298,7 +293,7 @@ const resolvers = {
         if (syncCronStrings && syncCronStrings.length) {
           syncStuff = {
             cronStrings: sourceConfig.cron.sync.cronStrings,
-            nextDate: getNextDate(syncCronStrings),
+            nextDate: getNextDateFromCronStrings(syncCronStrings).toISOString(),
             enabled: !!_.get(sourceConfig, 'cron.sync.enabled'),
           }
         }
@@ -307,7 +302,7 @@ const resolvers = {
         if (purgeCronStrings && purgeCronStrings.length) {
           purgeStuff = {
             cronStrings: sourceConfig.cron.purge.cronStrings,
-            nextDate: getNextDate(purgeCronStrings),
+            nextDate: getNextDateFromCronStrings(purgeCronStrings).toISOString(),
             enabled: !!_.get(sourceConfig, 'cron.purge.enabled'),
           }
         }
@@ -316,7 +311,7 @@ const resolvers = {
         if (reconcileCronStrings && reconcileCronStrings.length) {
           reconcileStuff = {
             cronStrings: sourceConfig.cron.reconcile.cronStrings,
-            nextDate: getNextDate(reconcileCronStrings),
+            nextDate: getNextDateFromCronStrings(reconcileCronStrings).toISOString(),
             enabled: !!_.get(sourceConfig, 'cron.reconcile.enabled'),
           }
         }
