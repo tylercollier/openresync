@@ -15,6 +15,7 @@ export default {
   props: {
     // We expect a moment object or a string like from the database
     datetime: [Object, String],
+    timeoutId: null,
   },
   methods: {
     getPreferredDisplayDatetime(datetime) {
@@ -30,12 +31,15 @@ export default {
         // Ensure a moment
         const m = moment.utc(this.datetime)
         const milliseconds = getMillisecondsUntilRelativeTimeChange(m, moment.utc())
-        setTimeout(this.setTimeoutForDisplay, milliseconds)
+        this.timeoutId = setTimeout(this.setTimeoutForDisplay, milliseconds)
       }
     },
   },
   mounted() {
     this.setTimeoutForDisplay()
+  },
+  beforeDestroy() {
+    clearTimeout(this.timeoutId)
   },
   watch: {
     '$globals.useRelativeTime'(newValue) {
