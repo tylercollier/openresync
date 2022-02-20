@@ -130,7 +130,7 @@
               <td>{{ cronSchedule.sourceName }}</td>
               <td>{{ cronSchedule.type }}</td>
               <td>
-                <DisplayDatetime :datetime="cronSchedule.nextDate" />
+                <DisplayDatetimeCron :cron-schedule="cronSchedule" />
               </td>
               <td>
                 <CronStrings :cron-strings="cronSchedule.cronStrings" />
@@ -149,9 +149,13 @@
 
 <script>
 import DisplayDatetime from './DisplayDatetime'
+import DisplayDatetimeCron from './DisplayDatetimeCron'
 import CronStrings from './CronStrings'
 import orderBy from 'lodash/orderBy'
 import { makeGlobalSettings } from '../lib/utils/index'
+import {CronJob} from "cron";
+import {getMillisecondsUntilUpcomingRelativeTimeChange} from "../../lib/sync/utils/datetime";
+import moment from "moment";
 
 const orderByOptions = [
   { text: 'Sources listed in user config', value: 'userConfig' },
@@ -168,10 +172,10 @@ export default {
   data() {
     return {
       orderByOptions,
+      timeoutIds: [],
     }
   },
   computed: {
-    // orderByName: utils.makeGlobalSetting('cronPage.orderByName'),
     ...makeGlobalSettings({
       orderByName: 'cronPage.orderByName',
     }),
@@ -200,8 +204,23 @@ export default {
       }
     },
   },
+  mount() {
+    const ordered = this.orderedCronSchedules()
+    for (let cronSchedule of ordered) {
+      const cronJob = new CronJob(cronSchedule.cronStrings[0], () => {})
+      const nextDate = cronJob.nextDate()
+      const milliseconds = 100 + getMillisecondsUntilUpcomingRelativeTimeChange(moment.utc(), nextDate)
+      this.timeoutIds.push(setTimeout(() => this.$forceUpdate(), milliseconds))
+    }
+  },
+  beforeDestroy() {
+    for (const timeoutId of this.timeoutIds) {
+      clearTimeout(timeoutId)
+    }
+  },
   components: {
     DisplayDatetime,
+    DisplayDatetimeCron,
     CronStrings,
   },
 }
