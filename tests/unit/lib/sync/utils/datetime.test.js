@@ -12,7 +12,7 @@ describe('datetime', () => {
       })
     })
 
-    describe('[44.5s, 45m)', () => {
+    describe('[44.5s, 44.5m)', () => {
       test('50s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:00:50Z')
@@ -26,9 +26,23 @@ describe('datetime', () => {
         const milliseconds = datetimeLib.getMillisecondsUntilRelativeTimeChange(oldTime, newTime)
         expect(milliseconds).toEqual(1000 * 20)
       })
+
+      test('44m10s', () => {
+        const oldTime = moment.utc('2020-01-01T00:00:00Z')
+        const newTime = moment.utc('2020-01-01T00:44:10Z')
+        const milliseconds = datetimeLib.getMillisecondsUntilRelativeTimeChange(oldTime, newTime)
+        expect(milliseconds).toEqual(1000 * 20)
+      })
     })
 
-    describe('[45m, 21.5h)', () => {
+    describe('[44.5m, 21.5h)', () => {
+      test('44m50s', () => {
+        const oldTime = moment.utc('2020-01-01T00:00:00Z')
+        const newTime = moment.utc('2020-01-01T00:44:50Z')
+        const milliseconds = datetimeLib.getMillisecondsUntilRelativeTimeChange(oldTime, newTime)
+        expect(milliseconds).toEqual(1000 * 60 * 45 + 1000 * 10)
+      })
+
       test('50m', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:50:00Z')
@@ -48,7 +62,6 @@ describe('datetime', () => {
       test('1d2h', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-02T02:00:00Z')
-        // expect(oldTime.from(newTime)).toEqual(5)
         const milliseconds = datetimeLib.getMillisecondsUntilRelativeTimeChange(oldTime, newTime)
         expect(milliseconds).toEqual(1000 * 60 * 60 * 10)
       })
@@ -95,7 +108,7 @@ describe('datetime', () => {
       })
     })
 
-    describe('(-45m, -1m30s]', () => {
+    describe('(-44.5m, -1m30s]', () => {
       test('2m10s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:02:10Z')
@@ -105,25 +118,25 @@ describe('datetime', () => {
 
       test('5m25s', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
-        const newTime = moment.utc('2020-01-01T00:05:25')
+        const newTime = moment.utc('2020-01-01T00:05:25Z')
         const milliseconds = datetimeLib.getMillisecondsUntilUpcomingRelativeTimeChange(oldTime, newTime)
         expect(milliseconds).toEqual(1000 * 55)
       })
     })
 
-    describe('(-21h30m, -45m]', () => {
+    describe('(-21h30m, -44.5m]', () => {
       test('50m', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T00:50:00Z')
         const milliseconds = datetimeLib.getMillisecondsUntilUpcomingRelativeTimeChange(oldTime, newTime)
-        expect(milliseconds).toEqual(1000 * 60 * 5)
+        expect(milliseconds).toEqual(1000 * 60 * 5.5)
       })
 
       test('1h10m', () => {
         const oldTime = moment.utc('2020-01-01T00:00:00Z')
         const newTime = moment.utc('2020-01-01T01:10:00Z')
         const milliseconds = datetimeLib.getMillisecondsUntilUpcomingRelativeTimeChange(oldTime, newTime)
-        expect(milliseconds).toEqual(1000 * 60 * 25)
+        expect(milliseconds).toEqual(1000 * 60 * 25.5)
       })
 
       test('2h10m', () => {
