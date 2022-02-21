@@ -15,7 +15,11 @@ export default {
   props: {
     // We expect a moment object or a string like from the database
     datetime: [Object, String],
-    timeoutId: null,
+  },
+  data() {
+    return {
+      timeoutId: null,
+    }
   },
   methods: {
     getPreferredDisplayDatetime(datetime) {
