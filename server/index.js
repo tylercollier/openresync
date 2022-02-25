@@ -14,7 +14,7 @@ const destinationManagerLib = require('../lib/sync/destinationManager')
 const downloaderLib = require('../lib/sync/downloader')
 const EventEmitter = require('events')
 const pino = require('pino')
-const { CronJob, sendAt } = require('cron')
+const { CronJob } = require('cron')
 const pathLib = require('path')
 const moment = require('moment')
 const statsSyncLib = require('../lib/stats/sync')
@@ -513,7 +513,7 @@ function getCronJobs(internalConfig) {
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
           const job = new CronJob(cronTime, jobCountWrapper(sourceName, 'sync', () => {
-            doSync(downloader, destinationManager)
+            return doSync(downloader, destinationManager)
           }))
           jobs.push(job)
         }
@@ -526,7 +526,7 @@ function getCronJobs(internalConfig) {
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
           const job = new CronJob(cronString, jobCountWrapper(sourceName, 'purge', () => {
-            doPurge(downloader, destinationManager)
+            return doPurge(downloader, destinationManager)
           }))
           jobs.push(job)
         }
@@ -539,7 +539,7 @@ function getCronJobs(internalConfig) {
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
           const job = new CronJob(cronString, jobCountWrapper(sourceName, 'reconcile', () => {
-            doReconcile(downloader, destinationManager)
+            return doReconcile(downloader, destinationManager)
           }))
           jobs.push(job)
         }
