@@ -57,6 +57,9 @@ Install the app, configure it, build it, start the back-end server (and optional
 
 ```
 $ git clone https://github.com/tylercollier/openresync
+$ cd openresync
+# optional: switch to the dev branch to get the newest but less tested features
+$ git checkout dev
 $ npm install
 ```
 
