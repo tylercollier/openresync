@@ -376,7 +376,7 @@ async function doSync(downloader, destinationManager) {
   if (await downloader.isDownloadNeeded('sync')) {
     await downloader.downloadMlsResources()
   }
-  await destinationManager.resumeSync('sync')
+  await destinationManager.resumeSync('sync', metadata)
 }
 
 async function doPurge(downloader, destinationManager) {
