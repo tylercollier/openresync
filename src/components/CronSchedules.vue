@@ -2,9 +2,9 @@
   <div class="g">
     <div><span class="tw-font-bold">Next sync:</span></div>
     <div class="ml-2">
-      <display-datetime
+      <DisplayDatetimeCron
         v-if="schedules.length && schedules[0].sync"
-        :datetime="schedules[0].sync.nextDate"
+        :cron-schedule="schedules[0].sync"
         :class="{ 'tw-text-gray-400': !schedules[0].sync.enabled }"
       />
     </div>
@@ -16,9 +16,9 @@
     </div>
     <div><span class="tw-font-bold">Next purge:</span></div>
     <div class="ml-2">
-      <display-datetime
+      <DisplayDatetimeCron
         v-if="schedules.length && schedules[0].purge"
-        :datetime="schedules[0].purge.nextDate"
+        :cron-schedule="schedules[0].purge"
         :class="{ 'tw-text-gray-400': !schedules[0].purge.enabled }"
       />
     </div>
@@ -30,9 +30,9 @@
     </div>
     <div><span class="tw-font-bold">Next reconcile:</span></div>
     <div class="ml-2">
-      <display-datetime
+      <DisplayDatetimeCron
         v-if="schedules.length && schedules[0].reconcile"
-        :datetime="schedules[0].reconcile.nextDate"
+        :cron-schedule="schedules[0].reconcile"
         :class="{ 'tw-text-gray-400': !schedules[0].reconcile.enabled }"
       />
     </div>
@@ -50,6 +50,7 @@
 
 <script>
 import CronStrings from './CronStrings'
+import DisplayDatetimeCron from './DisplayDatetimeCron'
 
 export default {
   props: {
@@ -57,6 +58,7 @@ export default {
   },
   components: {
     CronStrings,
+    DisplayDatetimeCron,
   },
 }
 </script>
