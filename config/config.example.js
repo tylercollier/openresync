@@ -98,6 +98,17 @@ const bridgeExample = {
     return url.toString()
   },
 
+  // Optional. If not specified, will use getPurgeEndpoint.
+  // Get the reconcile endpoint for a given MLS Resource, but meant for reconciling. This should be a function that
+  // returns a string.
+  // The function accepts two parameters:
+  // 1) MlsResource object, as described in the 'mlsResources' item below.
+  // 2) isExpandedMlsResource, a boolean which indicates if the resource is a root or was used as an $expand'ed
+  // resource. In the latter case, you might perhaps not want to use any $filter condition.
+  // Do not include a $select query string parameter; it will be overwritten with the primary key(s) of the
+  // resource.
+  // getReconcileEndpoint: (mlsResourceObj, isExpandedMlsResource) => string
+
   // This should be the largest $top value allowed by the MLS during replication. Bridge Interactive allows 2000.
   top: 2000,
 
