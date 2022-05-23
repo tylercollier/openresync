@@ -1,5 +1,5 @@
 <template>
-  <QueryLoader
+  <query-loader
     :query="gql => gql`
       query SyncStatsDetails($sourceName: String) {
         syncStatsDetails(sourceName: $sourceName) {
@@ -16,25 +16,20 @@
     `"
     :variables="{ sourceName }"
   >
-    <template v-slot="data">
-      <StatsDetails :stats="data.syncStatsDetails" />
+    <template v-slot="{ data, refresh }">
+      <StatsDetails :stats="data.syncStatsDetails" @refresh="refresh" :source-name="sourceName" />
     </template>
-  </QueryLoader>
+  </query-loader>
 </template>
 
 <script>
-import QueryLoader from './QueryLoader'
 import StatsDetails from './StatsDetails'
 
 export default {
   props: {
-    sourceName: {
-      type: String,
-      required: false,
-    },
+    sourceName: String,
   },
   components: {
-    QueryLoader,
     StatsDetails,
   },
 }

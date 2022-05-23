@@ -8,11 +8,14 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 import { split } from 'apollo-link'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
+import { merge } from 'lodash'
+import ReactiveProvide from 'vue-reactive-provide'
 import router from './routes'
+import settings from './settings'
 import './components/index'
 
 import './assets/tailwind.css'
-import '../lib/bootstrap/init'
+import './lib/bootstrap/init'
 import './assets/index.scss'
 
 const httpLink = createHttpLink()
@@ -55,8 +58,31 @@ const apolloProvider = new VueApollo({
 })
 
 Vue.use(VueRouter)
+Vue.use(ReactiveProvide);
 
 Vue.config.productionTip = false
+
+const defaultSettings = {
+  version: '0.0.2',
+  useRelativeTime: false,
+  cronPage: {
+    orderByName: 'userConfig'
+  }
+}
+const savedSettings = settings.getSettings()
+const mergedSettings = merge(defaultSettings, savedSettings)
+const globalStore = new Vue({
+  data: mergedSettings,
+  methods: {
+    save() {
+      const temp = Object.assign({}, globalStore.$data)
+      // $apolloData must get added automatically somewhere. Remove it.
+      delete temp.$apolloData
+      settings.saveSettings(temp)
+    },
+  },
+})
+Vue.prototype.$globals = globalStore
 
 new Vue({
   render: h => h(App),

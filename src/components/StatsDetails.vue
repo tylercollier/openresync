@@ -1,7 +1,15 @@
 <template>
   <div>
     <div v-for="resource of stats" :key="resource.name">
-      <h3>{{resource.name}}</h3>
+      <div class="tw-flex tw-justify-between">
+        <h3>{{ resource.name }}</h3>
+        <div>
+          <b-button size="sm" variant="outline-success" @click="$emit('refresh')">
+            <b-icon icon="arrow-repeat"/>
+            Refresh
+          </b-button>
+        </div>
+      </div>
       <b-table-simple small striped hover>
         <thead>
         <tr>
@@ -45,8 +53,15 @@
 
 <script>
 export default {
+  inject: ['jobsProvider'],
   props: {
+    sourceName: String,
     stats: Array,
+  },
+  data() {
+    return {
+      jobsCountForSource: 0,
+    }
   },
   methods: {
     numRecordsInMls(num) {
@@ -61,6 +76,21 @@ export default {
       }
       return `Too many by ${destinationNumRecords - numRecordsInMls}`
     },
-  }
+  },
+  watch: {
+    jobsProvider: {
+      deep: true,
+      handler(newValue, /* oldValue */) {
+        // Let's keep this simple. If a job ended, refresh the stats.
+        // Hmm. I tried comparing newValue and oldValue, and they were always the same. So we keep track of the value in
+        // our own state.
+        const newJobsCountForSource = newValue.runningJobs.filter(x => x.sourceName === this.sourceName).length
+        if (newJobsCountForSource < this.jobsCountForSource) {
+          this.$emit('refresh')
+        }
+        this.jobsCountForSource = newJobsCountForSource
+      },
+    },
+  },
 }
 </script>

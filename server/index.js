@@ -14,7 +14,7 @@ const destinationManagerLib = require('../lib/sync/destinationManager')
 const downloaderLib = require('../lib/sync/downloader')
 const EventEmitter = require('events')
 const pino = require('pino')
-const CronJob = require('cron').CronJob
+const { CronJob } = require('cron')
 const pathLib = require('path')
 const moment = require('moment')
 const statsSyncLib = require('../lib/stats/sync')
@@ -23,7 +23,8 @@ const statsReconcileLib = require('../lib/stats/reconcile')
 const utils = require('../lib/sync/utils')
 const express = require('express')
 const { createServer } = require('http')
-const { displayStringFormat } = require('../lib/sync/utils/datetime')
+const { displayStringFormat, getNextDateFromCronStrings } = require('../lib/sync/utils/datetime')
+const { areAnyJobsFromSourceRunning }  = require('../lib/sync/utils/jobs')
 
 const dotenv = require('dotenv')
 dotenv.config()
@@ -170,6 +171,7 @@ const typeDefs = gql`
   type CronSkedj {
     cronStrings: [String]
     nextDate: DateTime
+    enabled: Boolean
   }
 
   type CronSchedule {
@@ -178,16 +180,32 @@ const typeDefs = gql`
     purge: CronSkedj
     reconcile: CronSkedj
   }
+  
+  type Job {
+    sourceName: String!
+    type: String!
+    startedAt: DateTime!
+  }
+
+  input JobInput {
+    sourceName: String!
+    type: String!
+  }
 
   type Query {
     userConfig: UserConfig
     syncStats(sourceName: String): SyncStats!
     syncStatsDetails(sourceName: String): [StatsDetailsResource!]!
     cronSchedules(sourceName: String): [CronSchedule!]!
+    runningJobs: [Job!]!
+  }
+  
+  type Mutation {
+    startJob(job: JobInput!): Void
   }
 
   type Subscription {
-    numRunningJobs: Int!
+    runningJobs: [Job!]!
   }
 `
 
@@ -268,11 +286,6 @@ const resolvers = {
       return data
     },
     cronSchedules: async (parent, args) => {
-      function getNextDate(cronStrings) {
-        const cronJobs = cronStrings.map(x => new CronJob(x, () => {}))
-        const orderedJobs = _.orderBy(cronJobs, x => x.nextDate())
-        return orderedJobs[0].nextDate().toISOString()
-      }
       function getCronSchedule(sourceName) {
         const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
         let syncStuff = null
@@ -280,7 +293,8 @@ const resolvers = {
         if (syncCronStrings && syncCronStrings.length) {
           syncStuff = {
             cronStrings: sourceConfig.cron.sync.cronStrings,
-            nextDate: getNextDate(syncCronStrings),
+            nextDate: getNextDateFromCronStrings(syncCronStrings).toISOString(),
+            enabled: !!_.get(sourceConfig, 'cron.sync.enabled'),
           }
         }
         let purgeStuff = null
@@ -288,7 +302,8 @@ const resolvers = {
         if (purgeCronStrings && purgeCronStrings.length) {
           purgeStuff = {
             cronStrings: sourceConfig.cron.purge.cronStrings,
-            nextDate: getNextDate(purgeCronStrings),
+            nextDate: getNextDateFromCronStrings(purgeCronStrings).toISOString(),
+            enabled: !!_.get(sourceConfig, 'cron.purge.enabled'),
           }
         }
         let reconcileStuff = null
@@ -296,7 +311,8 @@ const resolvers = {
         if (reconcileCronStrings && reconcileCronStrings.length) {
           reconcileStuff = {
             cronStrings: sourceConfig.cron.reconcile.cronStrings,
-            nextDate: getNextDate(reconcileCronStrings),
+            nextDate: getNextDateFromCronStrings(reconcileCronStrings).toISOString(),
+            enabled: !!_.get(sourceConfig, 'cron.reconcile.enabled'),
           }
         }
         return {
@@ -310,14 +326,69 @@ const resolvers = {
       const sourceNames = args.sourceName ? [args.sourceName] : userConfig.sources.map(x => x.name)
       return sourceNames.map(getCronSchedule)
     },
+    runningJobs: async (parent, args) => {
+      return runningJobs
+    },
+  },
+  Mutation: {
+    startJob: async (parent, args) => {
+      const { sourceName, type } = args.job
+      if (!(await allowJobToRun(sourceName, type))) {
+        const m = `${type} job for ${sourceName} may not run because other jobs for that source are already running`
+        throw new Error(m)
+      }
+      let fn = doSync
+      if (type === 'purge') {
+        fn = doPurge
+      } else if (type === 'reconcile') {
+        fn = doReconcile
+      }
+      const objs = reservedObjsBySource[sourceName]
+      fn = fn.bind(undefined, objs.downloader, objs.destinationManager)
+      jobCountWrapper(sourceName, type, fn)()
+    },
   },
   Subscription: {
-    numRunningJobs: {
+    runningJobs: {
       subscribe() {
-        return pubsub.asyncIterator(['numRunningJobs'])
+        return pubsub.asyncIterator(['runningJobs'])
       },
     },
   },
+}
+
+// This is a rudimentary way of not allowing colliding jobs for now. Eventually we'll want something more robust, most
+// importantly allowing the user to override.
+async function allowJobToRun(sourceName, type) {
+  return !areAnyJobsFromSourceRunning(runningJobs, sourceName)
+}
+
+async function doSync(downloader, destinationManager) {
+  const metadataString = await downloader.downloadMlsMetadata()
+  const metadata = await utils.parseMetadataString(metadataString)
+  await destinationManager.syncMetadata(metadata)
+
+  if (await downloader.isDownloadNeeded('sync')) {
+    await downloader.downloadMlsResources()
+  }
+  await destinationManager.resumeSync('sync', metadata)
+}
+
+async function doPurge(downloader, destinationManager) {
+  if (await downloader.isDownloadNeeded('purge')) {
+    await downloader.downloadPurgeData()
+  }
+  await destinationManager.resumePurge()
+}
+
+async function doReconcile(downloader, destinationManager) {
+  if (await downloader.isDownloadNeeded('reconcile')) {
+    await downloader.downloadReconcileData()
+    await downloader.downloadMissingData()
+  }
+  const metadataString = await downloader.downloadMlsMetadata()
+  const metadata = await utils.parseMetadataString(metadataString)
+  await destinationManager.resumeSync('missing', metadata)
 }
 
 const server = new ApolloServer({
@@ -369,10 +440,37 @@ async function startServer() {
   })
 }
 
+const jobCountWrapper = (sourceName, type, fn) => {
+  return async () => {
+    try {
+      const m = moment()
+      runningJobs.push({
+        sourceName,
+        type,
+        startedAt: m.toISOString(),
+      })
+      pubsub.publish('runningJobs', {
+        runningJobs,
+      })
+      const dts = m.format(displayStringFormat)
+      console.log('Running jobs', runningJobs.length, `Starting job ${type} ${sourceName} at ${dts}`)
+      await fn()
+    } finally {
+      const runningJobIndex = runningJobs.findIndex(x => x.sourceName === sourceName && x.type === type)
+      runningJobs.splice(runningJobIndex, 1)
+      pubsub.publish('runningJobs', {
+        runningJobs,
+      })
+      const m = moment().format(displayStringFormat)
+      console.log('Running jobs', runningJobs.length, `Ended job ${type} ${sourceName} at ${m}`)
+    }
+  }
+}
 
+const runningJobs = []
+const reservedObjsBySource = {}
 function getCronJobs(internalConfig) {
   const jobs = []
-  let runningJobsCount = 0
   userConfig.sources.forEach(source => {
     const sourceName = source.name
     const sourceConfig = getMlsSourceUserConfig(userConfig, sourceName)
@@ -396,49 +494,16 @@ function getCronJobs(internalConfig) {
       const downloader = downloaderLib(sourceName, configBundle, eventEmitter, logger)
       const destinationManager = destinationManagerLib(sourceName, configBundle, eventEmitter, logger)
       downloader.setDestinationManager(destinationManager)
-
-      const jobCountWrapper = (name, fn) => {
-        return async () => {
-          try {
-            runningJobsCount++
-            pubsub.publish('numRunningJobs', {
-              numRunningJobs: runningJobsCount,
-            })
-            const m = moment().format(displayStringFormat)
-            console.log(`runningJobsCount`, runningJobsCount, `Starting job ${name} at ${m}`)
-            await fn()
-          } finally {
-            runningJobsCount--
-            pubsub.publish('numRunningJobs', {
-              numRunningJobs: runningJobsCount,
-            })
-            const m = moment().format(displayStringFormat)
-            console.log(`runningJobsCount`, runningJobsCount, `Ended job ${name} at ${m}`)
-          }
-        }
+      reservedObjsBySource[sourceName] = {
+        downloader,
+        destinationManager,
       }
-
-      async function doSync() {
-        const metadataString = await downloader.downloadMlsMetadata()
-        const metadata = await utils.parseMetadataString(metadataString)
-        await destinationManager.syncMetadata(metadata)
-
-        await downloader.downloadMlsResources()
-        await destinationManager.resumeSync('sync')
-      }
-
-      async function doPurge() {
-        await downloader.downloadPurgeData()
-        await destinationManager.resumePurge()
-      }
-
-      async function doReconcile() {
-        const metadataString = await downloader.downloadMlsMetadata()
-        const metadata = await utils.parseMetadataString(metadataString)
-        await downloader.downloadReconcileData()
-        await downloader.downloadMissingData()
-        await destinationManager.resumeSync('missing', metadata)
-      }
+      const statsSync = statsSyncLib(db)
+      statsSync.listen(eventEmitter)
+      const statsPurge = statsPurgeLib(db)
+      statsPurge.listen(eventEmitter)
+      const statsReconcile = statsReconcileLib(db)
+      statsReconcile.listen(eventEmitter)
 
       const syncCronEnabled = _.get(sourceConfig, 'cron.sync.enabled', true)
       if (syncCronEnabled && syncCronStrings.length) {
@@ -447,10 +512,10 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronTime, jobCountWrapper(`sync ${source.name}`, doSync))
+          const job = new CronJob(cronTime, jobCountWrapper(sourceName, 'sync', () => {
+            return doSync(downloader, destinationManager)
+          }))
           jobs.push(job)
-          const statsSync = statsSyncLib(db)
-          statsSync.listen(eventEmitter)
         }
       }
       const purgeCronEnabled = _.get(sourceConfig, 'cron.purge.enabled', true)
@@ -460,10 +525,10 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronString, jobCountWrapper(`purge ${source.name}`, doPurge))
+          const job = new CronJob(cronString, jobCountWrapper(sourceName, 'purge', () => {
+            return doPurge(downloader, destinationManager)
+          }))
           jobs.push(job)
-          const statsPurge = statsPurgeLib(db)
-          statsPurge.listen(eventEmitter)
         }
       }
       const reconcileCronEnabled = _.get(sourceConfig, 'cron.reconcile.enabled', true)
@@ -473,10 +538,10 @@ function getCronJobs(internalConfig) {
           // For debugging, start in a few seconds, rather than read the config
           // const m = moment().add(2, 'seconds')
           // const cronTime = m.toDate()
-          const job = new CronJob(cronString, jobCountWrapper(`reconcile ${source.name}`, doReconcile))
+          const job = new CronJob(cronString, jobCountWrapper(sourceName, 'reconcile', () => {
+            return doReconcile(downloader, destinationManager)
+          }))
           jobs.push(job)
-          const statsReconcile = statsReconcileLib(db)
-          statsReconcile.listen(eventEmitter)
         }
       }
 

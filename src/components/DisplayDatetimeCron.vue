@@ -1,6 +1,6 @@
 <template>
   <span>
-    <template v-if="datetime">
+    <template v-if="cronSchedule.nextDate">
       <span v-b-tooltip.hover :title="getOtherDisplayDatetime(datetime)">{{getPreferredDisplayDatetime(datetime)}}</span>
     </template>
     <template v-else>N/A</template>
@@ -8,16 +8,21 @@
 </template>
 
 <script>
-import { getDisplayDatetime, getMillisecondsUntilRelativeTimeChange } from '../../lib/sync/utils/datetime'
+import {
+  getDisplayDatetime,
+  getMillisecondsUntilUpcomingRelativeTimeChange,
+  getNextDateFromCronStrings,
+} from '../../lib/sync/utils/datetime'
 import moment from 'moment'
 
 export default {
   props: {
     // We expect a moment object or a string like from the database
-    datetime: [Object, String],
+    cronSchedule: Object,
   },
   data() {
     return {
+      datetime: this.cronSchedule.nextDate,
       timeoutId: null,
     }
   },
@@ -30,11 +35,10 @@ export default {
     },
     setTimeoutForDisplay() {
       if (this.$globals.useRelativeTime) {
-        this.$forceUpdate()
+        const nextDate = getNextDateFromCronStrings(this.cronSchedule.cronStrings)
+        this.datetime = nextDate
 
-        // Ensure a moment
-        const m = moment.utc(this.datetime)
-        const milliseconds = getMillisecondsUntilRelativeTimeChange(m, moment.utc())
+        const milliseconds = getMillisecondsUntilUpcomingRelativeTimeChange(moment.utc(), nextDate)
         this.timeoutId = setTimeout(this.setTimeoutForDisplay, milliseconds)
       }
     },

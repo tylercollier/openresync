@@ -1,6 +1,6 @@
 <template>
   <div>
-    <QueryLoader
+    <query-loader
       :query="gql => gql`
         fragment databaseRecordFields on DatabaseRecord {
           created_at
@@ -75,25 +75,20 @@
       `"
       :variables="{ sourceName }"
     >
-      <template v-slot="data">
+      <template v-slot="{ data }">
         <slot :stats="data.syncStats" />
       </template>
-    </QueryLoader>
+    </query-loader>
   </div>
 </template>
 
 <script>
-import QueryLoader from './QueryLoader'
-
 export default {
   props: {
     sourceName: {
       type: String,
       required: false,
     },
-  },
-  components: {
-    QueryLoader,
   },
 }
 </script>

@@ -2,7 +2,7 @@
 
 ![OpenReSync logo](https://user-images.githubusercontent.com/366538/144324447-cfa1c275-9bad-47d7-aff5-57a3af297f48.png)
 
-Open Real Estate Sync (openresync) is a node application that syncs (replicates) MLS data from one or more sources via the RESO Web API (such as Trestle or Bridge Interactive) to one or more destinations (MySQL and Solr are supported so far, and it's easy enough to add more), and allows you to see the sync status via a local website.
+Open Real Estate Sync (openresync) is a node application that syncs (replicates) MLS data from one or more sources via the RESO Web API (such as Trestle, MLS Grid, or Bridge Interactive) to one or more destinations (MySQL and Solr are supported so far, and it's easy enough to add more), and allows you to see the sync status via a local website.
 
 It is meant to be used by developers.
 
@@ -22,7 +22,7 @@ This project is in alpha status. It is meant for those who could benefit from wh
 
 The initial major version is 0, which means that [semantic versioning](https://semver.org/) is not yet followed.
 
-This project is now being used in production by the author, using RECOLORADO and CRMLS (California Regional MLS) via Trestle.
+This project is now being used in production by the author, using REcolorado and CRMLS (California Regional MLS) via Trestle, and Realtracs via MLS Grid.
 
 ## Features
 
@@ -81,16 +81,6 @@ $ npm run build
 
 #### Start the server
 
-**Here's how to run it in production:**
-
-```
-$ NODE_ENV=production TZ=UTC node server/index.js
-```
-
-Then visit the website at http://localhost:4000
-
-You might also want to add this environment variable: `NODE_OPTIONS=--max_old_space_size=4096`. That sets the max memory allowed by node, in kilobytes (node's default is 2048). It's only necessary when you are using the reconcile process on large datasets, so it's suggested you only use it if you get out-of-memory errors.
-
 **Here's how to run it in development:**
 
 > If you run this dev web server, you do not need to run the build step above.
@@ -104,6 +94,16 @@ $ npm run serve
 
 Then visit the website at http://localhost:3461
 
+**Here's how to run it in production:**
+
+```
+$ NODE_ENV=production TZ=UTC node server/index.js
+```
+
+Then visit the website at http://localhost:4000
+
+You might also want to add this environment variable: `NODE_OPTIONS=--max_old_space_size=4096`. That sets the max memory allowed by node, in kilobytes (node's default is 2048). It's only necessary when you are using the reconcile process on large datasets, so it's suggested you only use it if you get out-of-memory errors.
+
 ## Configuration
 
 See the heavily commented `config/config.example.js`. Copy it to `config/config.js` and edit it according to your needs. At a high level, you'll be specifying:
@@ -112,7 +112,12 @@ See the heavily commented `config/config.example.js`. Copy it to `config/config.
 * resources: which data to download from the MLS, e.g. Property, Media, Member, etc
 * destinations: where to put that data
 
-There is an internal configuration file you should be aware of, which is described in the "How does it work?" section.
+**Considerations**
+
+* In the screenshots, you can see source names like `recolorado_res`, `recolorado_rentals`, `recolorado_land`. In my production scenario, I'm breaking the data from the Property resource into separate buckets for those 3 different property types. This isn't required, and would probably be discouraged for people starting from scratch. However, I did it this way to keep compatability with my legacy systems that used to connect to the data sources via RETS and expected these buckets. I consider this a good thing: that you have the power to do it this way if you choose.
+* Are you using MLS Grid as a source? See [docs/mlsgrid.md](docs/mlsgrid.md) in this repo.
+
+There is an internal configuration file that you should be aware of, which is described in the "How does it work?" section.
 
 ### .env
 
@@ -164,11 +169,11 @@ Note that the first sync might take hours depending on the platform and number o
 
 #### Purge
 
-Purging is when the MLS removes records. We need to mirror those removals, removing those same records from our destinations. To be able to know which records have been removed, we download all the IDs from the MLS, and compare them to the IDs in each of our destinations. It therefore takes longer than the sync process and uses more memory.
+Purging is when the MLS removes records. We need to mirror those removals by removing those same records from our destinations. To be able to know which records have been removed, we download all the IDs from the MLS, and compare them to the IDs in each of our destinations. It therefore takes longer than the sync process and uses more memory.
 
 The purge process is similar to the sync process but differs in 2 important ways.
 
-1. There is no resuming the download process. It always downloads the entirety of the data. This is unfortunate and could be improved but is the simplest approach to handle Trestle and Bridge Interactive in the same way, which reduces code complexity.
+1. There is no resuming the download process. It always downloads the entirety of the data. This is unfortunate and could be improved but is the simplest approach to handle the Trestle, MLS Grid, and Bridge Interactive platforms in the same way, which reduces code complexity.
 2. The downloaded files are not processed one by one, but instead must be loaded into memory all at once to compare to what's in the destinations. After the purge is complete, all downloaded files for the resource are deleted.
 
 Trestle calls purging "reconciliation" in their docs. Do not confuse it with our dis-similar reconcile process.
@@ -225,11 +230,11 @@ Another advantage of syncing the data and creating your own API is you basically
 **Question:** So it just syncs the data? Is that useful? Can I e.g. show the data on a website?  
 **Answer:** Yes, it just syncs the data. But this is the mission of this project and should be a large chunk of any work needed to produce your own project that uses the data. You'll still have work left to do such as field mapping (especially if you use multiple MLS sources and intend to harmonize their data and show it in one place consistently). Of course whether you're allowed to show the data publicly is a legal concern you'll need to talk with each MLS about.
 
-**Question:** Can I use other RESO Web API sources besides Trestle or Bridge?
-**Answer:** Yes! Others like [Spark](https://landing.sparkplatform.com/) haven't been tested yet, but the codebase is set up to add more without too much work.
+**Question:** Can I use other RESO Web API sources besides Trestle, MLS Grid, or Bridge Interactive?
+**Answer:** Yes! At least one user is running in production with UtahRealEstate.com. Others,like [Spark](https://landing.sparkplatform.com/), haven't been tested yet, but the codebase is set up to add more without too much work.
 
 **Question:** How many sources can I realistically sync at once?  
-**Answer:** Because a lot of the work done can be offloaded from node (e.g. downloading files, writing JSON files to disk, sending data to MySQL, etc), it's likely a bunch. (I'm currently doing 6 in production.) I would still recommend trying to offset the cron schedules from one another. For example, if you sync source A every 15 minutes starting on the hour, you might consider syncing source B every 15 minutes starting at 5 minutes past the hour. Another factor is if you'll be writing to the same table or different ones. For example, if you're just doing Property records from different MLSs and write to a single Property table, you might get lock problems. But if you use different MySQL databases per source, or use the `makeTableName` concept to prefix your table names such that two sync processes aren't writing to the same table, MySQL will probably be able to handle it just fine.
+**Answer:** Because a lot of the work done can be offloaded from node (e.g. downloading files, writing JSON files to disk, sending data to MySQL, etc), it's likely a bunch. (I'm currently doing 9 in production.) I would still recommend trying to offset the cron schedules from one another. For example, if you sync source A every 15 minutes starting on the hour, you might consider syncing source B every 15 minutes starting at 5 minutes past the hour. Another factor is if you'll be writing to the same table or different ones. For example, if you're just doing Property records from different MLSs and write to a single Property table, you might get lock problems. But if you use different MySQL databases per source, or use the `makeTableName` concept to prefix your table names such that two sync processes aren't writing to the same table, MySQL will probably be able to handle it just fine.
 
 **Question:** Do I have to use the web server?  
 **Answer:** No. You could use the code in the `lib/sync` dir as a library and run the download, sync, and purge processes as you see fit. See `lib/sync/go.js` as an example. I intend to turn the sync code into its own npm module eventually.
@@ -241,8 +246,6 @@ Another advantage of syncing the data and creating your own API is you basically
 
 ## Roadmap
 
-* From the website, allow the user to force a sync to occur
-  * Or a purge, or reconcile
 * Get me the data for record X from the MLS
   * As in, allow me to type in a ListingId, MemberKey, etc, etc, and show it to me in a user-friendly way, and allow me to compare it to what's in the destinations.
 * During a sync, how many have been synced so far, how many to go, and estimate of completion time
@@ -251,6 +254,6 @@ Another advantage of syncing the data and creating your own API is you basically
 * Split the website code from the sync code. Turn at least the sync code into an npm module.
 * Rewrite in TypeScript so the project is more self documenting
 
-## Contributing
+## Contributing / Contact
 
-I'm very interested in working with others to use the application and getting their feedback in the form of features requests, bug reports, and so on. Please create issues or reach out directly. My email address is shown on my github profile page.
+I'm very interested in working with others to use the application and getting their feedback in the form of features requests, bug reports, and so on. Please create issues or reach out directly. My email address is shown on my github profile page, or you can use the contact information on the website at https://openresync.com.
