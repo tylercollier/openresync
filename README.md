@@ -180,7 +180,7 @@ Trestle calls purging "reconciliation" in their docs. Do not confuse it with our
 
 #### Reconcile
 
-Reconciling ensures all your records match what's in the MLS by getting what's missing or different from the MLS (thus it never deletes data). In theory, the sync process should be all you need to get data into your destinations, but in practice, records are missed frequently.
+Reconciling ensures all your records match what's in the MLS by getting what's missing or different from the MLS (thus it never deletes data). In theory, the sync process should be all you need to get data into your destinations, but in practice, records can be missed. Or, if some are mistakenly deleted, the reconcile process can restore them.
 
 You could also have some arbitrary requirement to update a subset of records. All you'd need to do is modify one of the timestamp fields on any such records, and the reconcile process would get/update them.
 
@@ -210,10 +210,11 @@ It is not recommended to change any code. Or if you do, do so in a new branch. O
 ## Q&A
 
 **Question:** Why would I use this tool and sync data locally, rather than querying the RESO Web API directly?  
-**Answer:** It's true that the RESO Web API is generally superior to the older RETS standard, and one reason is it allows you to efficiently query the API for specific results that could then e.g. be shown on a website. However, here are a number of use cases to sync the data locally.
+**Answer:** It's true that the RESO Web API is generally superior to the older RETS standard, and one reason is it typically allows you to efficiently query the API for specific results that could then e.g. be shown on a website. However, here are a number of use cases to sync the data locally.
 
   In the following list, there are ideas that are beyond what this application does on its own. But you'd have the power to take things another step and accomplish things the RESO Web API can't.
 
+  * Not all platforms support direct querying via the API. For example, MLS Grid only supports replication.
   * Aggregates like "What's the median price?", or "What's the average number of pictures per listing?"
   * Massage data
     * E.g. in Phoenix, Ahwatukee is not a city, but people treat it like one. You could make searches done by your users automatically turn requests for the village (not city) of Ahwatukee into a search for the 3 zip codes representing Ahwatukee.
