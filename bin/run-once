@@ -1,0 +1,149 @@
+#!/usr/bin/env node
+
+const downloaderLib = require('../lib/sync/downloader')
+const destinationManagerLib = require('../lib/sync/destinationManager')
+const { buildUserConfig, getInternalConfig, flushInternalConfig } = require('../lib/config')
+const EventEmitter = require('events')
+const pathLib = require('path')
+const pino = require('pino')
+const CronJob = require('cron').CronJob
+const utils = require('../lib/sync/utils')
+const knex = require('knex')
+const statsSyncLib = require('../lib/stats/sync')
+const statsPurgeLib = require('../lib/stats/purge')
+const statsReconcileLib = require('../lib/stats/reconcile')
+const { setUp } = require('../lib/stats/setUp')
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+const _ = require('lodash')
+
+const argv = yargs(hideBin(process.argv))
+  .command('sync', 'Run the sync process for a source')
+  .command('purge', 'Run the purge process for a source')
+  .command('reconcile', 'Run the reconcile process for a source')
+  .demandCommand(1)
+  .alias('s', 'source-name')
+  .describe('s', 'the source name from config.js')
+  .demandOption('s')
+  .boolean('d')
+  .default('d', true)
+  .alias('d', 'download')
+  .describe('d', 'download the data')
+  .boolean('p')
+  .default('p', true)
+  .alias('p', 'process')
+  .describe('p', 'process the data')
+  .check(argv => {
+    if (!argv.d && !argv.p) {
+      throw new Error('You must specify at least --download or --process')
+    }
+    return true
+  })
+  .strict()
+  .argv
+
+async function go() {
+  const userConfig = buildUserConfig()
+  let internalConfig = await getInternalConfig()
+  const configBundle = {
+    userConfig,
+    internalConfig,
+    flushInternalConfig,
+  }
+  const statsDb = knex({
+    client: 'mysql2',
+    connection: userConfig.database.connectionString
+  })
+
+  function makeObjs(mlsSourceName, eventEmitter, logger) {
+    const downloader = downloaderLib(mlsSourceName, configBundle, eventEmitter, logger)
+    const destinationManager = destinationManagerLib(mlsSourceName, configBundle, eventEmitter, logger)
+    downloader.setDestinationManager(destinationManager)
+    return {
+      downloader,
+      destinationManager,
+    }
+  }
+
+  async function doSync(objs, options) {
+    if (options.download) {
+      await objs.downloader.downloadMlsResources()
+    }
+    if (options.process) {
+      await objs.destinationManager.resumeSync('sync', objs.metadata)
+    }
+  }
+
+  async function doPurge(objs, options) {
+    if (options.download) {
+      await objs.downloader.downloadPurgeData()
+    }
+    if (options.process) {
+      await objs.destinationManager.resumePurge()
+    }
+  }
+
+  async function doReconcile(objs, options) {
+    if (options.download) {
+      await objs.downloader.downloadReconcileData()
+      await objs.downloader.downloadMissingData()
+    }
+    if (options.process) {
+      await objs.destinationManager.resumeSync('missing', objs.metadata)
+    }
+  }
+
+  async function run(sourceName, commandName, commandOptions) {
+    const eventEmitter = new EventEmitter()
+    const logger = pino({
+      level: 'trace',
+      // I don't care about the hostname, pid
+      base: null,
+      timestamp: pino.stdTimeFunctions.isoTime,
+    }, pino.destination(pathLib.resolve(__dirname, `../logs/${sourceName}.ndjson`)))
+
+    const objs = makeObjs(sourceName, eventEmitter, logger)
+
+    const metadataString = await objs.downloader.downloadMlsMetadata()
+    const metadata = await utils.parseMetadataString(metadataString)
+    objs.metadata = metadata
+
+    const statsSync = statsSyncLib(statsDb)
+    const syncThunker = statsSync.listen(eventEmitter)
+    const statsPurge = statsPurgeLib(statsDb)
+    const purgeThunker = statsPurge.listen(eventEmitter)
+    const statsReconcile = statsReconcileLib(statsDb)
+    const reconcileThunker = statsReconcile.listen(eventEmitter)
+
+    try {
+      if (commandName === 'sync') {
+        await doSync(objs, commandOptions)
+      } else if (commandName === 'purge') {
+        await doPurge(objs, commandOptions)
+      } else if (commandName === 'reconcile') {
+        await doReconcile(objs, commandOptions)
+      }
+    } finally {
+      Promise.all([
+        syncThunker.onEmptyQueue(),
+        purgeThunker.onEmptyQueue(),
+        reconcileThunker.onEmptyQueue(),
+      ])
+        .then(() => {
+          statsDb.destroy()
+        })
+      objs.destinationManager.closeConnections()
+    }
+  }
+
+  const sourceName = argv.sourceName
+  if (!userConfig.sources.map(x => x.name).includes(sourceName)) {
+    console.error(`Source name of ${sourceName} is invalid; you must use a source name specified in your config.js`)
+    process.exit(1)
+  }
+  const commandName = argv._[0]
+  const commandOptions = _.pick(argv, ['download', 'process'])
+  run(sourceName, commandName, commandOptions)
+}
+
+go()

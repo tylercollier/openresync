@@ -52,7 +52,8 @@
     "vue-cli-plugin-tailwind": "^2.0.6",
     "vue-reactive-provide": "^0.3.0",
     "vue-router": "^3.5.1",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.4.23",
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.13.8",
