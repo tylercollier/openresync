@@ -1,6 +1,6 @@
 {
   "name": "openresync",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "dev": "TZ=UTC nodemon --watch server/ --watch lib/ --watch tests/qa/ --watch tests/fixtures/",

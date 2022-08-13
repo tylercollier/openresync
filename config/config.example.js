@@ -228,9 +228,13 @@ const bridgeExample = {
         // makeFieldName option. But this function would allow you to modify the data in any way, for example change
         // keys, values, add key/value pairs, remove some, etc. It takes the MLS resource name, the record as
         // downloaded, the metadata, and, if the record is from an $expand'ed resource, the (potentially transformed)
-        // parent object, and should return an object. Do not mutate the record passed in. Note: For the primary key's
-        // value, you may return null if your table's primary key is auto-incremented, which is the default.
-        // transform: (mlsResourceName, record, metadata, transformedParentRecord) => {
+        // parent object, and finally, a cache object, and should return an object. Do not mutate the record passed in.
+        // Note: For the primary key's value, you may return null if your table's primary key is auto-incremented, which
+        // is the default.
+        // The "cache" is an (initially empty) object that we pass each time to the transform function, on which you may
+        // put any data you wish. This allows the transform function to e.g. do lookup work when it chooses; it could do
+        // it all on the first pass and not again, or it could potentially do it only on-demand somehow.
+        // transform: (mlsResourceName, record, metadata, transformedParentRecord, cache) => {
         //   // Return an object. Do not mutate record. As in, make a copy, modify and return that.
         // }
       },
@@ -282,10 +286,10 @@ const bridgeExample = {
       // difference between what you want inserted/updated is the field names, then you should use the
       // makeFieldName option. But this function would allow you to modify the data in any way, for example change
       // keys, values, add key/value pairs, remove some, etc. It takes the MLS resource name, the record as
-      // downloaded, and the metadata object, a cache object (described below), and should return an object.
-      // The "cache" is an (originally an empty) object that we pass each time to the transform function. This
-      // allows the transform function to do lookup work when it chooses, e.g. it could do it all on the first pass
-      // and not again, or it could potentially do it only on-demand somehow.
+      // downloaded, the metadata object, and a cache object, and should return an object.
+      // The "cache" is an (initially empty) object that we pass each time to the transform function, on which you may
+      // put any data you wish. This allows the transform function to e.g. do lookup work when it chooses; it could do
+      // it all on the first pass and not again, or it could potentially do it only on-demand somehow.
       // TODO: The transformedParentRecord parameter doesn't exist, as it does in the MySQL data adapter, because I
       // have not personally needed it. Its main motivation is for relational databases and might not be needed in Solr,
       // which supports nested documents, although it wouldn't hurt to have it. It could be added by request.

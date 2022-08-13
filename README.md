@@ -2,7 +2,7 @@
 
 ![OpenReSync logo](https://user-images.githubusercontent.com/366538/144324447-cfa1c275-9bad-47d7-aff5-57a3af297f48.png)
 
-Open Real Estate Sync (openresync) is a node application that syncs (replicates) MLS data from one or more sources via the RESO Web API (such as Trestle, MLS Grid, or Bridge Interactive) to one or more destinations (MySQL and Solr are supported so far, and it's easy enough to add more), and allows you to see the sync status via a local website.
+Open Real Estate Sync (OpenRESync) is a node application that syncs (aka replicates) MLS data from one or more sources via the RESO Web API (such as Trestle, MLS Grid, RMLS, or Bridge Interactive) to one or more destinations (MySQL and Solr are supported so far, and it's easy enough to add more), and allows you to see the sync status via a local admin website.
 
 It is meant to be used by developers.
 
@@ -15,6 +15,14 @@ It does the syncing for you, and helps you answer these questions:
 ## Website
 
 Want to convince your boss to use this tool, so that you can actually spend your time working on your team's product instead of syncing MLS data? Send them to https://openresync.com.
+
+## Chat
+
+There is a discord server available. Anyone can ask questions, and developers can get technical support.
+
+Here's an invite: [https://discord.gg/EgbgSKRB93](https://discord.gg/EgbgSKRB93)
+
+It's a temporary invite (to prevent bots and abuse), which means that you will be kicked when you disconnect, but while you're in there, just request a permanent invite.
 
 ## Project status
 
@@ -97,7 +105,7 @@ Then visit the website at http://localhost:3461
 **Here's how to run it in production:**
 
 ```
-$ NODE_ENV=production TZ=UTC node server/index.js
+$ TZ=UTC node server/index.js
 ```
 
 Then visit the website at http://localhost:4000
@@ -118,12 +126,6 @@ See the heavily commented `config/config.example.js`. Copy it to `config/config.
 * Are you using MLS Grid as a source? See [docs/mlsgrid.md](docs/mlsgrid.md) in this repo.
 
 There is an internal configuration file that you should be aware of, which is described in the "How does it work?" section.
-
-### .env
-
-It's recommended to put secrets in a `.env` file. These will be read automatically using the `dotenv` library and available for your config file in `process.env` values.
-
-There's no `example.env` type of file because there are no standard fields you should configure. For example, in a project that uses the Austin Board of Realtors sample dataset, you might use environment variables like ABOR_CLIENT_ID and ABOR_CLIENT_SECRET to store your Oauth credentials, and then you could reference them with e.g. `process.env.ABOR_CLIENT_ID` in your `config/config.js` file. There's no particular recommendation other than you keep your secrets out of the git repository.
 
 ## How does it work?
 
@@ -163,7 +165,7 @@ For each of the processes, the state is recorded in the internal config file (di
 
 #### Sync
 
-The sync process adds or updates records (no deletions). To know what to download from the MLS, the destination (or first destination, if you have multiple) is queried to get the most recent timestamp. Then, the MLS is queried for records with a newer timestamp. If there is an error when downloading the files, then when the sync process is next run, instead of querying the destination for the newest record, it will look newest record in the newest file.
+The sync process adds or updates records (no deletions). To know what to download from the MLS, the destination (or first destination, if you have multiple) is queried to get the most recent timestamp. Then, the MLS is queried for records with a newer timestamp. If there is an error when downloading the files, then when the sync process is next run, instead of querying the destination for the newest record, it will look at the newest record in the newest file.
 
 Note that the first sync might take hours depending on the platform and number of records in the MLS and if you filter any out. However, subsequent syncs generally run quite quickly so it's reasonable to run it, say, every 15 minutes.
 
@@ -242,7 +244,7 @@ Another advantage of syncing the data and creating your own API is you basically
 
 ## Known limitations
 
-1. One of the main value propositions of this application is to make it robust in error handling. It is desired that the application not crash and wisely show error situations to the user. However, this has not been tested thoroughly. Some errors might be swallowed altogether. Some errors are quite verbose and we don't shorten these yet. It would definitely be great to catch 502 and 504 errors from the platforms and retry downloads, but this is not done yet.
+1. One of the main value propositions of this application is to make it robust in error handling. It is desired that the application not crash and wisely show error situations to the user. However, this has not been tested thoroughly. Some errors might be swallowed altogether. Some errors are quite verbose and we don't shorten these yet.
 1. The Solr data adapter does not yet sync/manage the schema for you (though the MySQL data adapter does).
 
 ## Roadmap
