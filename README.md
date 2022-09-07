@@ -20,9 +20,7 @@ Want to convince your boss to use this tool, so that you can actually spend your
 
 There is a discord server available. Anyone can ask questions, and developers can get technical support.
 
-Here's an invite: [https://discord.gg/EgbgSKRB93](https://discord.gg/EgbgSKRB93)
-
-It's a temporary invite (to prevent bots and abuse), which means that you will be kicked when you disconnect, but while you're in there, just request a permanent invite.
+Here's an invite: [https://discord.gg/AyVSMGBfTH](https://discord.gg/AyVSMGBfTH)
 
 ## Project status
 
