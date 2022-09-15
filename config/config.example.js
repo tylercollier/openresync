@@ -10,38 +10,72 @@ const pathLib = require('path')
 const _ = require("lodash");
 const moment = require("moment");
 
-module.exports = () => ({
-  // Use the expected config version. This allows us to detect if you are using improper config.
-  userConfigVersion: '0.3.0',
-
-  // sources is an array of objects. Each object is a "source", or a connection to an MLS. However, there is nothing
-  // preventing you from connecting to an MLS multiple times if necessary. For example, from a single MLS, if you wanted
-  // Property resources for the city of Georgetown to go to a MySQL destination table named PropertyA and Property
-  // resources for the city of Austin to go to a MySQL destination table named Property B, you'd use two different
-  // resources. For convenience, you could share more of their configuration.
-  sources: [
-    // See these example source objects later in this config file. Regardless of which platform you are connecting to,
-    // be sure to see the bridgeExample example source because it contains the most documentation on the possible
-    // values.
-    bridgeExample,
-    trestleExample,
-    mlsGridExample,
-  ],
-
-  // Optional
-  server: {
-    // Optional
-    // The server runs on this port. Defaults to 4000.
-    // port: 4000,
+const bridgeInteractive = {
+  getResourceEndpoint: mlsResourceObj => {
+    const endpoint = `https://api.bridgedataoutput.com/api/v2/OData/actris_ref/${mlsResourceObj.name}`
+    const url = new URL(endpoint)
+    // These can be useful subsets for dev purposes
+    if (mlsResourceObj.name === 'Property') {
+      url.searchParams.set('$filter', "City eq 'Georgetown'")
+    } else if (mlsResourceObj.name === 'Member') {
+      url.searchParams.set('$filter', "MemberCity eq 'Georgetown'")
+    }
+    return url.toString()
   },
+}
 
-  // This database is used for stats, such as keeping the history of the sync, e.g. when the sync (or purge) occurred,
-  // how many records were synced per resource and destination, etc.
-  database: {
-    // connectionString: 'mysql://user1:password1@localhost:33033/openresync',
-    connectionString: 'mysql://user1:password1@localhost:33033/qa',
+const trestle = {
+  getResourceEndpoint: mlsResourceObj => {
+    const endpoint = `https://api-prod.corelogic.com/trestle/odata/${mlsResourceObj.name}`
+    const url = new URL(endpoint)
+    // These can be useful subsets for dev purposes
+    if (mlsResourceObj.name === 'Property') {
+      url.searchParams.set('$filter', "City eq 'Georgetown'")
+    } else if (mlsResourceObj.name === 'Member') {
+      url.searchParams.set('$filter', "MemberCity eq 'Georgetown'")
+    }
+    return url.toString()
   },
-})
+}
+
+const mlsGridRealtracs = () => {
+  function removeIdPrefix(val) {
+    return val.substring(3)
+  }
+
+  return {
+    getResourceEndpoint: mlsResourceObj => {
+      const endpoint = `https://api.mlsgrid.com/v2/${mlsResourceObj.name}`
+      const url = new URL(endpoint)
+      const filter = url.searchParams.get('$filter')
+      url.searchParams.set('$filter', `(${filter} and MlgCanView eq true and OriginatingSystemName eq 'realtrac')`)
+      return url.toString()
+    },
+    mlsGridPrefixedKeyFields: {
+      // This is not an exhaustive list for all resources.
+      Property: new Set([
+        'BuyerAgentKey',
+        'BuyerAgentMlsId',
+        'BuyerOfficeKey',
+        'BuyerOfficeMlsId',
+        'ListAgentKey',
+        'ListAgentMlsId',
+        'ListOfficeKey',
+        'ListOfficeMlsId',
+        'ListingId',
+        'ListingKey',
+      ]),
+      Media: new Set([
+        'MediaObjectID'
+      ]),
+    },
+    maybeRemovePrefixFromKeyFieldValue(record, fieldName) {
+      if (record[fieldName]) {
+        record[fieldName] = removeIdPrefix(record[fieldName])
+      }
+    },
+  }
+}
 
 const bridgeExample = {
   // The name should be thought of as an ID. It will be used for directories and URLs, so don't use spaces, or other
@@ -602,69 +636,35 @@ const mlsGridExample = {
   },
 }
 
-const bridgeInteractive = {
-  getResourceEndpoint: mlsResourceObj => {
-    const endpoint = `https://api.bridgedataoutput.com/api/v2/OData/actris_ref/${mlsResourceObj.name}`
-    const url = new URL(endpoint)
-    // These can be useful subsets for dev purposes
-    if (mlsResourceObj.name === 'Property') {
-      url.searchParams.set('$filter', "City eq 'Georgetown'")
-    } else if (mlsResourceObj.name === 'Member') {
-      url.searchParams.set('$filter', "MemberCity eq 'Georgetown'")
-    }
-    return url.toString()
+module.exports = () => ({
+  // Use the expected config version. This allows us to detect if you are using improper config.
+  userConfigVersion: '0.3.0',
+
+  // sources is an array of objects. Each object is a "source", or a connection to an MLS. However, there is nothing
+  // preventing you from connecting to an MLS multiple times if necessary. For example, from a single MLS, if you wanted
+  // Property resources for the city of Georgetown to go to a MySQL destination table named PropertyA and Property
+  // resources for the city of Austin to go to a MySQL destination table named Property B, you'd use two different
+  // resources. For convenience, you could share more of their configuration.
+  sources: [
+    // See these example source objects later in this config file. Regardless of which platform you are connecting to,
+    // be sure to see the bridgeExample example source because it contains the most documentation on the possible
+    // values.
+    bridgeExample,
+    trestleExample,
+    mlsGridExample,
+  ],
+
+  // Optional
+  server: {
+    // Optional
+    // The server runs on this port. Defaults to 4000.
+    // port: 4000,
   },
-}
 
-const trestle = {
-  getResourceEndpoint: mlsResourceObj => {
-    const endpoint = `https://api-prod.corelogic.com/trestle/odata/${mlsResourceObj.name}`
-    const url = new URL(endpoint)
-    // These can be useful subsets for dev purposes
-    if (mlsResourceObj.name === 'Property') {
-      url.searchParams.set('$filter', "City eq 'Georgetown'")
-    } else if (mlsResourceObj.name === 'Member') {
-      url.searchParams.set('$filter', "MemberCity eq 'Georgetown'")
-    }
-    return url.toString()
+  // This database is used for stats, such as keeping the history of the sync, e.g. when the sync (or purge) occurred,
+  // how many records were synced per resource and destination, etc.
+  database: {
+    // connectionString: 'mysql://user1:password1@localhost:33033/openresync',
+    connectionString: 'mysql://user1:password1@localhost:33033/qa',
   },
-}
-
-const mlsGridRealtracs = () => {
-  function removeIdPrefix(val) {
-    return val.substring(3)
-  }
-
-  return {
-    getResourceEndpoint: mlsResourceObj => {
-      const endpoint = `https://api.mlsgrid.com/v2/${mlsResourceObj.name}`
-      const url = new URL(endpoint)
-      const filter = url.searchParams.get('$filter')
-      url.searchParams.set('$filter', `(${filter} and MlgCanView eq true and OriginatingSystemName eq 'realtrac')`)
-      return url.toString()
-    },
-    mlsGridPrefixedKeyFields: {
-      // This is not an exhaustive list for all resources.
-      Property: new Set([
-        'BuyerAgentKey',
-        'BuyerAgentMlsId',
-        'BuyerOfficeKey',
-        'BuyerOfficeMlsId',
-        'ListAgentKey',
-        'ListAgentMlsId',
-        'ListOfficeKey',
-        'ListOfficeMlsId',
-        'ListingId',
-        'ListingKey',
-      ]),
-      Media: new Set([
-        'MediaObjectID'
-      ]),
-    },
-    maybeRemovePrefixFromKeyFieldValue(record, fieldName) {
-      if (record[fieldName]) {
-        record[fieldName] = removeIdPrefix(record[fieldName])
-      }
-    },
-  }
-}
+})

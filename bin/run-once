@@ -21,6 +21,7 @@ const argv = yargs(hideBin(process.argv))
   .command('sync', 'Run the sync process for a source')
   .command('purge', 'Run the purge process for a source')
   .command('reconcile', 'Run the reconcile process for a source')
+  .command('sync-metadata', 'Download the metadata and alter the destinations accordingly')
   .demandCommand(1)
   .alias('s', 'source-name')
   .describe('s', 'the source name from config.js')
@@ -93,6 +94,10 @@ async function go() {
     }
   }
 
+  async function doSyncMetadata(destinationManager, metadata) {
+    await destinationManager.syncMetadata(metadata)
+  }
+
   async function run(sourceName, commandName, commandOptions) {
     const eventEmitter = new EventEmitter()
     const logger = pino({
@@ -122,6 +127,8 @@ async function go() {
         await doPurge(objs, commandOptions)
       } else if (commandName === 'reconcile') {
         await doReconcile(objs, commandOptions)
+      } else if (commandName === 'sync-metadata') {
+        await doSyncMetadata(objs.destinationManager, metadata)
       }
     } finally {
       Promise.all([
