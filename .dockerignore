@@ -13,10 +13,10 @@ docker/.env
 docker/volumes/
 
 # local env files
-.envrc
 .env
 .env.local
 .env.*.local
+.envrc
 
 # Log files
 npm-debug.log*
