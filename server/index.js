@@ -453,7 +453,7 @@ const jobCountWrapper = (sourceName, type, fn) => {
         runningJobs,
       })
       const dts = m.format(displayStringFormat)
-      console.log('Running jobs', runningJobs.length, `Starting job ${type} ${sourceName} at ${dts}`)
+      console.log('Running jobs', runningJobs.length, `Starting job ${type} ${sourceName} at ${dts} --`)
       await fn()
     } finally {
       const runningJobIndex = runningJobs.findIndex(x => x.sourceName === sourceName && x.type === type)
@@ -462,7 +462,7 @@ const jobCountWrapper = (sourceName, type, fn) => {
         runningJobs,
       })
       const m = moment().format(displayStringFormat)
-      console.log('Running jobs', runningJobs.length, `Ended job ${type} ${sourceName} at ${m}`)
+      console.log('Running jobs', runningJobs.length, `Ended job ${type} ${sourceName} at ${m} <<`)
     }
   }
 }
