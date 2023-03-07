@@ -1,34 +1,34 @@
 version: '3'
 services:
-  mysql8:
-    image: mysql:8.0.29
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: openresync
-      MYSQL_USER: user1
-      MYSQL_PASSWORD: password1
-    volumes:
-      - ./volumes/mysql:/var/lib/mysql
-    ports:
-      - 33033:3306
-#  mariadb:
-#    image: mariadb:10.3.28-focal
+#  mysql:
+#    image: mysql:8.0.22
 #    environment:
 #      MYSQL_ROOT_PASSWORD: root
 #      MYSQL_DATABASE: openresync
 #      MYSQL_USER: user1
 #      MYSQL_PASSWORD: password1
 #    volumes:
-#      - ./volumes/mariadb:/var/lib/mysql
+#      - ./volumes/mysql:/var/lib/mysql
 #    ports:
-#      - 33034:3306
-#  solr5:
-#    build: ./solr-5/
-#    volumes:
-#      - ./solr-5/configs:/var/lib/solr/configs
-#      - ./solr-5/templates:/var/lib/solr/templates
-#      - ./volumes/solr5:/var/lib/solr/dist/server/solr
-#      - ./solr-5/configs/solr.xml:/var/lib/solr/dist/server/solr/solr.xml
-#    ports:
-#      - 58983:8983
-#    command: "/var/lib/solr/dist/bin/solr start -f -a -Xmx1024m"
+#      - 33033:3306
+  mariadb:
+    image: mariadb:10.3.28-focal
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: openresync
+      MYSQL_USER: user1
+      MYSQL_PASSWORD: password1
+    volumes:
+      - ./volumes/mariadb:/var/lib/mysql
+    ports:
+      - 33034:3306
+  solr5:
+    build: ./solr-5/
+    volumes:
+      - ./solr-5/configs:/var/lib/solr/configs
+      - ./solr-5/templates:/var/lib/solr/templates
+      - ./volumes/solr5:/var/lib/solr/dist/server/solr
+      - ./solr-5/configs/solr.xml:/var/lib/solr/dist/server/solr/solr.xml
+    ports:
+      - 58983:8983
+    command: "/var/lib/solr/dist/bin/solr start -f -a -Xmx1024m"
