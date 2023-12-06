@@ -1,3 +1,19 @@
+// Fix errors with 'npm run build' for Node 17+.
+// See: https://stackoverflow.com/a/72219174/135101
+const crypto = require('crypto');
+/**
+ * The MD4 algorithm is not available anymore in Node.js 17+ (because of library SSL 3).
+ * In that case, silently replace MD4 by the MD5 algorithm.
+ */
+try {
+  crypto.createHash('md4');
+} catch (e) {
+  const origCreateHash = crypto.createHash;
+  crypto.createHash = (alg, opts) => {
+    return origCreateHash(alg === 'md4' ? 'md5' : alg, opts);
+  };
+}
+
 const config = require('./lib/config').buildUserConfig()
 const MomentLocalesPlugin = require('moment-locales-webpack-plugin')
 const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
