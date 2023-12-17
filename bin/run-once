@@ -22,6 +22,7 @@ const argv = yargs(hideBin(process.argv))
   .command('purge', 'Run the purge process for a source')
   .command('reconcile', 'Run the reconcile process for a source')
   .command('sync-metadata', 'Download the metadata and alter the destinations accordingly')
+  .command('add-fields', 'Run a user-specified subset of sync to get a few fields for all records')
   .demandCommand(1)
   .alias('s', 'source-name')
   .describe('s', 'the source name from config.js')
@@ -98,14 +99,26 @@ async function go() {
     await destinationManager.syncMetadata(metadata)
   }
 
+  async function doAddFields(objs, options) {
+    if (options.download) {
+      await objs.downloader.downloadAddFieldsData()
+    }
+    if (options.process) {
+      await objs.destinationManager.resumeSync('addFields', objs.metadata)
+    }
+  }
+
   async function run(sourceName, commandName, commandOptions) {
     const eventEmitter = new EventEmitter()
+    // I want add-fields logs in another file. Presumably it will be run while the existing cron jobs continue to
+    // execute, and I'd rather not have interwoven logs.
+    const baseFileName = commandName === 'add-fields' ? `${sourceName}-add-fields` : sourceName
     const logger = pino({
       level: 'trace',
       // I don't care about the hostname, pid
       base: null,
       timestamp: pino.stdTimeFunctions.isoTime,
-    }, pino.destination(pathLib.resolve(__dirname, `../logs/${sourceName}.ndjson`)))
+    }, pino.destination(pathLib.resolve(__dirname, `../logs/${baseFileName}.ndjson`)))
 
     const objs = makeObjs(sourceName, eventEmitter, logger)
 
@@ -129,6 +142,8 @@ async function go() {
         await doReconcile(objs, commandOptions)
       } else if (commandName === 'sync-metadata') {
         await doSyncMetadata(objs.destinationManager, metadata)
+      } else if (commandName === 'add-fields') {
+        await doAddFields(objs, commandOptions)
       }
     } finally {
       Promise.all([
