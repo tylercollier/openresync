@@ -110,9 +110,7 @@ async function go() {
 
   async function run(sourceName, commandName, commandOptions) {
     const eventEmitter = new EventEmitter()
-    // I want add-fields logs in another file. Presumably it will be run while the existing cron jobs continue to
-    // execute, and I'd rather not have interwoven logs.
-    const baseFileName = commandName === 'add-fields' ? `${sourceName}-add-fields` : sourceName
+    const baseFileName = `${sourceName}-run_once-${commandName}`
     const logger = pino({
       level: 'trace',
       // I don't care about the hostname, pid
