@@ -22,6 +22,7 @@ const argv = yargs(hideBin(process.argv))
   .command('purge', 'Run the purge process for a source')
   .command('reconcile', 'Run the reconcile process for a source')
   .command('sync-metadata', 'Download the metadata and alter the destinations accordingly')
+  .command('set-up-stats', 'Set up the stats tables in MySQL')
   .demandCommand(1)
   .alias('s', 'source-name')
   .describe('s', 'the source name from config.js')
@@ -129,6 +130,8 @@ async function go() {
         await doReconcile(objs, commandOptions)
       } else if (commandName === 'sync-metadata') {
         await doSyncMetadata(objs.destinationManager, metadata)
+      } else if (commandName === 'set-up-stats') {
+        await setUp(statsDb)
       }
     } finally {
       Promise.all([
