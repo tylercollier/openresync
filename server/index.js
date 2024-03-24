@@ -382,6 +382,8 @@ async function doPurge(downloader, destinationManager) {
 }
 
 async function doReconcile(downloader, destinationManager) {
+  // FIXME: The isDownloadNeeded() algorithm is not appropriate for the reconcile process. It doesn't take into account
+  // the extra step needed.
   if (await downloader.isDownloadNeeded('reconcile')) {
     await downloader.downloadReconcileData()
     await downloader.downloadMissingData()
