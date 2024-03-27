@@ -56,7 +56,16 @@ See all the cron schedules at once, which makes it easier to not overlap them:
 ![See all the cron schedules at once](https://user-images.githubusercontent.com/366538/141699270-975690d3-7bea-46d7-a8ad-83813a5298f4.png)
 
 ## How do I use it?
+### Docker
 
+You can run this in docker with 
+```shell
+docker run --init -v ${PWD}/absolute/path/to/config.js:/app/config/config.js -p 4000:4000 ckeeney/openresync
+``` 
+
+See our [Docker guide](docs/docker.md) for a more information on running this using docker and docker-compose. 
+
+### Natively
 Install the app, configure it, build it, start the back-end server (and optionally start the dev web server), and visit the local website that runs. These are described in the following steps.
 
 ### Installation
