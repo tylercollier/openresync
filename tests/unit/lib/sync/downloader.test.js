@@ -21,7 +21,7 @@ function makeDownloader(mlsResources) {
       name: 'aborTrestle',
       platformAdapterName: 'trestle',
       getReplicationEndpoint: mlsResourceObj => {
-        return `https://api-prod.corelogic.com/trestle/odata/${mlsResourceObj.name}?replication=true`
+        return `https://api-trestle.corelogic.com/trestle/odata/${mlsResourceObj.name}?replication=true`
       },
       mlsResources,
     }],

@@ -26,7 +26,7 @@ const bridgeInteractive = {
 
 const trestle = {
   getResourceEndpoint: mlsResourceObj => {
-    const endpoint = `https://api-prod.corelogic.com/trestle/odata/${mlsResourceObj.name}`
+    const endpoint = `https://api-trestle.corelogic.com/trestle/odata/${mlsResourceObj.name}`
     const url = new URL(endpoint)
     // These can be useful subsets for dev purposes
     if (mlsResourceObj.name === 'Property') {
@@ -391,7 +391,7 @@ const bridgeExample = {
 // should still look at the example for Bridge Interactive above because the options are mainly documented there.
 const trestleExample = {
   name: 'trestle',
-  metadataEndpoint: 'https://api-prod.corelogic.com/trestle/odata/$metadata',
+  metadataEndpoint: 'https://api-trestle.corelogic.com/trestle/odata/$metadata',
   getResourceEndpoint: trestle.getResourceEndpoint,
   getReplicationEndpoint: mlsResourceObj => {
     const resourceEndpoint = trestle.getResourceEndpoint(mlsResourceObj)
